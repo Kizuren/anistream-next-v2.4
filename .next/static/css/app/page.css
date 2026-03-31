@@ -1,0 +1,733 @@
+/*!*************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[3]!./src/components/SpotlightBanner.module.css ***!
+  \*************************************************************************************************************************************************************************************************************************************************************************************/
+.SpotlightBanner_banner__vwnyj {
+  position: relative;
+  height: 540px;
+  margin-top: calc(-1 * var(--nav-h));
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.SpotlightBanner_bg__xxOKW {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  transition: opacity 0.3s ease;
+}
+.SpotlightBanner_bgFade__5nq6A { opacity: 0.3; }
+
+.SpotlightBanner_gradient__EU9tl {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(270deg, rgba(14,15,19,0) 0%, rgba(14,15,19,0.65) 40%, rgba(14,15,19,0.97) 100%),
+    linear-gradient(0deg, rgba(14,15,19,1) 0%, transparent 35%);
+}
+
+/* ── Thumbnail strip ─────────────────────────────────────── */
+.SpotlightBanner_thumbStrip__ipNLw {
+  position: absolute;
+  right: max(24px, calc((100vw - var(--container)) / 2 + 24px));
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 4;
+}
+
+.SpotlightBanner_thumb___GDqC {
+  width: 70px;
+  aspect-ratio: 2/3;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color var(--t-base), transform var(--t-base), box-shadow var(--t-base);
+  opacity: 0.5;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.SpotlightBanner_thumb___GDqC img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.SpotlightBanner_thumbOverlay__P17Pl {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.2);
+}
+
+.SpotlightBanner_thumb___GDqC:hover { opacity: 0.8; transform: scale(1.04); }
+
+.SpotlightBanner_thumbActive__FEzsr {
+  opacity: 1 !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 16px var(--accent-glow) !important;
+  transform: scale(1.04) !important;
+}
+
+.SpotlightBanner_thumbActive__FEzsr .SpotlightBanner_thumbOverlay__P17Pl { display: none; }
+
+/* ── Content ─────────────────────────────────────────────── */
+.SpotlightBanner_content__P7IYK {
+  position: relative;
+  z-index: 3;
+  max-width: 560px;
+  padding:
+    calc(var(--nav-h) + 40px)
+    max(24px, calc((100vw - var(--container)) / 2 + 24px))
+    52px;
+  padding-left: max(24px, calc((100vw - var(--container)) / 2 + 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: SpotlightBanner_slideUp__C8lyr 0.5s cubic-bezier(0.16,1,0.3,1) both;
+  transition: opacity 0.25s ease;
+}
+.SpotlightBanner_contentFade__5rTrP { opacity: 0; }
+
+.SpotlightBanner_metaRow__JlUpy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.SpotlightBanner_typePill__EyCL5 {
+  padding: 3px 10px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.SpotlightBanner_infoPill__sOcL6 {
+  padding: 3px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-md);
+  color: var(--text-2);
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.SpotlightBanner_title__AYVVE {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3.5vw, 40px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.5px;
+  color: var(--text-1);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.SpotlightBanner_desc__ASJUE {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 460px;
+}
+
+.SpotlightBanner_episodeBadges__WeDhu { display: flex; gap: 6px; }
+
+.SpotlightBanner_epBadge__po7fm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(108,110,247,0.15);
+  border: 1px solid rgba(108,110,247,0.28);
+  color: #a8a9fc;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.SpotlightBanner_epBadgeDub__xwHXc {
+  background: rgba(53,212,176,0.10);
+  border-color: rgba(53,212,176,0.20);
+  color: #35d4b0;
+}
+
+.SpotlightBanner_actions__JkRwc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.SpotlightBanner_watchBtn__MRAb3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 600;
+  transition: opacity var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+  box-shadow: 0 4px 20px var(--accent-glow);
+  flex-shrink: 0;
+}
+.SpotlightBanner_watchBtn__MRAb3:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 6px 28px var(--accent-glow); }
+
+.SpotlightBanner_detailsBtn__8xDNx {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 20px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: var(--text-1);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--t-fast);
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+.SpotlightBanner_detailsBtn__8xDNx:hover { background: rgba(255,255,255,0.12); }
+
+.SpotlightBanner_dots__ZVMRi {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-top: 4px;
+}
+.SpotlightBanner_dot___7RFP {
+  width: 5px;
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.22);
+  transition: width var(--t-base), background var(--t-base);
+  cursor: pointer;
+}
+.SpotlightBanner_dotActive__jrnV_ { width: 18px; background: var(--accent); }
+
+/* ── Loading skeleton ─────────────────────────────────────── */
+.SpotlightBanner_skeleton__LXFYb {
+  height: 540px;
+  margin-top: calc(-1 * var(--nav-h));
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-elevated) 50%, var(--bg-card) 75%);
+  background-size: 600px 100%;
+  animation: SpotlightBanner_shimmer__cMuXw 1.5s infinite linear;
+}
+
+.SpotlightBanner_empty__RUdeC {
+  height: 420px;
+  margin-top: calc(-1 * var(--nav-h));
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.SpotlightBanner_emptyContent__VYOc2 { text-align: center; padding: 0 24px; }
+.SpotlightBanner_emptyLabel__CRg8k { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 10px; }
+.SpotlightBanner_emptyTitle__LGJC9 { font-family: var(--font-display); font-size: clamp(32px, 6vw, 56px); font-weight: 700; letter-spacing: -1px; margin-bottom: 12px; }
+.SpotlightBanner_emptyDesc__cIYtK  { font-size: 15px; color: var(--text-2); margin-bottom: 28px; }
+.SpotlightBanner_emptyBtn__Eg1cr   { display: inline-flex; align-items: center; padding: 12px 28px; background: var(--accent); color: #fff; border-radius: var(--r-md); font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px var(--accent-glow); transition: opacity var(--t-fast); }
+.SpotlightBanner_emptyBtn__Eg1cr:hover { opacity: 0.88; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .SpotlightBanner_banner__vwnyj { height: 480px; }
+  .SpotlightBanner_thumbStrip__ipNLw { display: none; }
+  .SpotlightBanner_content__P7IYK { max-width: 100%; padding-right: 24px; }
+}
+
+@media (max-width: 560px) {
+  .SpotlightBanner_banner__vwnyj { height: 420px; }
+  .SpotlightBanner_title__AYVVE  { font-size: 24px; }
+  .SpotlightBanner_desc__ASJUE   { display: none; }
+  .SpotlightBanner_content__P7IYK { gap: 10px; }
+}
+
+/*!*******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[3]!./src/components/AnimeCard.module.css ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************/
+.AnimeCard_card__ytnq5 {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  /* width: 100% so it fills grid cell — no more hardcoded 152px */
+  width: 100%;
+  text-decoration: none;
+  transition:
+    transform 0.28s cubic-bezier(0.16,1,0.3,1),
+    box-shadow 0.28s ease,
+    border-color 0.2s ease;
+}
+
+.AnimeCard_card__ytnq5:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(108,110,247,0.25);
+  border-color: rgba(108,110,247,0.2);
+}
+
+/* ── Poster ──────────────────────────────────────────────── */
+.AnimeCard_poster__gd7Qf {
+  position: relative;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+
+.AnimeCard_poster__gd7Qf img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.AnimeCard_card__ytnq5:hover .AnimeCard_poster__gd7Qf img { transform: scale(1.06); }
+
+/* Rank badge */
+.AnimeCard_rank__mcxYR {
+  position: absolute;
+  top: 7px; left: 7px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--r-xs);
+  z-index: 2;
+}
+
+/* Type tag */
+.AnimeCard_typeTag__0hhV7 {
+  position: absolute;
+  top: 7px; right: 7px;
+  background: rgba(0,0,0,0.65);
+  color: rgba(255,255,255,0.8);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: var(--r-xs);
+  z-index: 2;
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+}
+
+/* Hover overlay */
+.AnimeCard_overlay__A9q5F {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.8) 0%,
+    rgba(0,0,0,0.3) 50%,
+    rgba(0,0,0,0.05) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+.AnimeCard_card__ytnq5:hover .AnimeCard_overlay__A9q5F { opacity: 1; }
+
+.AnimeCard_playBtn__yUeIz {
+  width: 38px; height: 38px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transform: scale(0.7);
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.AnimeCard_card__ytnq5:hover .AnimeCard_playBtn__yUeIz {
+  transform: scale(1);
+  box-shadow: 0 0 30px rgba(108,110,247,0.5);
+}
+
+/* Badges */
+.AnimeCard_badges__U85RR {
+  position: absolute;
+  bottom: 6px; left: 6px;
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+/* ── Info ────────────────────────────────────────────────── */
+.AnimeCard_info__njx_E { padding: 9px 10px 11px; }
+
+.AnimeCard_title__VJO92 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-1);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.45;
+  margin-bottom: 5px;
+  transition: color var(--t-fast);
+}
+.AnimeCard_card__ytnq5:hover .AnimeCard_title__VJO92 { color: #a8a9fc; }
+
+.AnimeCard_meta__KkvBz {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.AnimeCard_rating__Aw_Ax { color: #f59e0b; font-weight: 600; }
+
+/*!*****************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[3]!./src/components/Section.module.css ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************************/
+.Section_section__GDNTw { margin-bottom: 40px; }
+
+.Section_header__mdYE1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.Section_viewAll__EB8R9 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--accent);
+  transition: opacity var(--t-fast), gap var(--t-fast);
+  white-space: nowrap;
+}
+.Section_viewAll__EB8R9:hover { opacity: 0.75; gap: 7px; }
+
+/* ── Responsive grid — wraps into multiple rows ────────── */
+.Section_row___eMKd {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  grid-gap: 14px;
+  gap: 14px;
+}
+
+/* Skeleton cards match real card dimensions */
+.Section_skelCard__8qr7h { width: 100%; }
+.Section_skelPoster__quTuR { width: 100%; aspect-ratio: 2/3; border-radius: var(--r-lg); }
+.Section_skelLine__c3Z30   { height: 10px; border-radius: 3px; }
+
+.Section_empty__Jc2qY {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.Section_emptyLink__xlcCR {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity var(--t-fast);
+}
+.Section_emptyLink__xlcCR:hover { opacity: 0.75; }
+
+/* ── Responsive breakpoints ────────────────────────────── */
+@media (max-width: 1024px) {
+  .Section_row___eMKd { grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .Section_row___eMKd { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+}
+
+@media (max-width: 400px) {
+  .Section_row___eMKd { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+}
+
+/*!********************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[3]!./src/components/HomeClient.module.css ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************/
+.HomeClient_errWrap__aaz_2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+.HomeClient_errCard__Gs0UA {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px;
+}
+.HomeClient_errIcon__Uwt_C { font-size: 36px; }
+.HomeClient_retryBtn__DERdp {
+  padding: 9px 22px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--r-md);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--t-fast);
+}
+.HomeClient_retryBtn__DERdp:hover { opacity: 0.88; }
+
+.HomeClient_page__V4Rkm { padding-top: 40px; padding-bottom: 70px; }
+
+/* ── Section header ──────────────────────────────────────── */
+.HomeClient_sectionHeader__JuNOB {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.HomeClient_viewAll__I_71m {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--accent);
+  transition: opacity var(--t-fast);
+}
+.HomeClient_viewAll__I_71m:hover { opacity: 0.75; }
+
+/* ── Continue Watching ────────────────────────────────────── */
+.HomeClient_continueSection__A83JI { margin-bottom: 32px; }
+
+.HomeClient_continueRow__xVBiW {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.HomeClient_continueRow__xVBiW::-webkit-scrollbar { display: none; }
+
+.HomeClient_continueCard__b0RtS {
+  flex-shrink: 0;
+  width: 124px;
+  text-decoration: none;
+}
+
+.HomeClient_continuePoster__zPaIe {
+  position: relative;
+  width: 124px;
+  aspect-ratio: 2/3;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--bg-elevated);
+  border: 1.5px solid transparent;
+  transition: border-color var(--t-base);
+  margin-bottom: 7px;
+}
+.HomeClient_continueCard__b0RtS:hover .HomeClient_continuePoster__zPaIe { border-color: var(--accent); }
+.HomeClient_continuePoster__zPaIe img { width: 100%; height: 100%; object-fit: cover; }
+
+.HomeClient_continuePlay__jUHe_ {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+.HomeClient_continueCard__b0RtS:hover .HomeClient_continuePlay__jUHe_ { opacity: 1; }
+
+.HomeClient_continueEpBadge__dTnBj {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  padding: 2px 7px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.HomeClient_continueName__dJP9b {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+/* ── Two-col layout ──────────────────────────────────────── */
+.HomeClient_twoCol__4s7Fb {
+  display: grid;
+  grid-template-columns: 1fr 288px;
+  grid-gap: 24px;
+  gap: 24px;
+  align-items: start;
+}
+
+.HomeClient_mainCol__NgEoA {}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.HomeClient_sidebar__7H4Pb {
+  position: -webkit-sticky;
+  position: sticky;
+  top: calc(var(--nav-h) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.HomeClient_top10Card__DvYls {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 16px;
+  overflow: hidden;
+}
+
+.HomeClient_top10Header__FEW0o {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.HomeClient_top10Title__kuTc0 {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.HomeClient_top10Badge__CqDsf {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  background: rgba(240,92,126,0.14);
+  border: 1px solid rgba(240,92,126,0.25);
+  color: var(--accent-2);
+  border-radius: 99px;
+}
+
+.HomeClient_top10Row__Gt_an {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 6px;
+  border-radius: var(--r-sm);
+  transition: background var(--t-fast);
+  text-decoration: none;
+}
+.HomeClient_top10Row__Gt_an:hover { background: var(--bg-elevated); }
+
+.HomeClient_top10SkelRow__9Pszt { display: flex; align-items: center; gap: 8px; padding: 7px 6px; }
+.HomeClient_top10SkelNum__FuN3S { width: 20px; height: 18px; border-radius: 3px; }
+.HomeClient_top10SkelImg__HNlLJ { width: 32px; height: 44px; border-radius: var(--r-sm); flex-shrink: 0; }
+
+.HomeClient_top10Num__Vke7n {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-3);
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.HomeClient_top10NumGold__13jpG { color: var(--accent); font-size: 15px; }
+
+.HomeClient_top10Poster__eXZIW {
+  width: 32px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+}
+
+.HomeClient_top10Info__erPA2 { flex: 1 1; min-width: 0; }
+.HomeClient_top10Name__CcDBq {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+.HomeClient_top10Meta__OWyhC { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.HomeClient_top10Meta__OWyhC span { font-size: 10.5px; color: var(--text-3); }
+
+/* ── Genre card ──────────────────────────────────────────── */
+.HomeClient_genreCard__N9Rb3 {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 16px;
+}
+
+.HomeClient_genreGrid__Mbtri {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 6px;
+  gap: 6px;
+}
+
+.HomeClient_genreChip__T7pbE {
+  padding: 7px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-align: center;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+  text-decoration: none;
+}
+.HomeClient_genreChip__T7pbE:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .HomeClient_twoCol__4s7Fb { grid-template-columns: 1fr; }
+  .HomeClient_sidebar__7H4Pb { position: static; display: grid; grid-template-columns: 1fr 1fr; grid-gap: 14px; gap: 14px; }
+}
+@media (max-width: 640px) {
+  .HomeClient_sidebar__7H4Pb { grid-template-columns: 1fr; }
+  .HomeClient_page__V4Rkm { padding-top: 28px; }
+}
+

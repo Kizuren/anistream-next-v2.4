@@ -1,0 +1,5 @@
+{
+  "/page": "app/page.js",
+  "/browse/page": "app/browse/page.js",
+  "/api/anime/category/[...slug]/route": "app/api/anime/category/[...slug]/route.js"
+}
