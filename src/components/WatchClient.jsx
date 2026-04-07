@@ -57,6 +57,28 @@ export default function WatchClient({ animeId, epSlug }) {
   const [embedReload,    setEmbedReload]   = useState(0);
   const [showMoreEmbed,  setShowMoreEmbed] = useState(false);
 
+  // ── Player preferences (persisted in localStorage) ───────────────────────
+  const [autoplay,  setAutoplay]  = useState(true);
+  const [autoNext,  setAutoNext]  = useState(true);
+
+  useEffect(() => {
+    try {
+      const ap = localStorage.getItem("player_autoplay");
+      const an = localStorage.getItem("player_autonext");
+      if (ap !== null) setAutoplay(ap === "1");
+      if (an !== null) setAutoNext(an === "1");
+    } catch {}
+  }, []);
+
+  function handleAutoplayChange(val) {
+    setAutoplay(val);
+    try { localStorage.setItem("player_autoplay", val ? "1" : "0"); } catch {}
+  }
+  function handleAutoNextChange(val) {
+    setAutoNext(val);
+    try { localStorage.setItem("player_autonext", val ? "1" : "0"); } catch {}
+  }
+
   // ── Load base data ────────────────────────────────────────────────────────
   useEffect(() => {
     api.info(animeId).then(setInfo).catch(() => {});
@@ -312,6 +334,16 @@ export default function WatchClient({ animeId, epSlug }) {
                   subtitles={cryStream?.subtitles || []}
                   headers={cryStream?.headers || {}}
                   poster={anime?.poster}
+                  onPrev={prevEp ? () => router.push(`/watch/${animeId}/${prevEp.epSlug}`) : null}
+                  onNext={nextEp ? () => router.push(`/watch/${animeId}/${nextEp.epSlug}`) : null}
+                  hasPrev={!!prevEp}
+                  hasNext={!!nextEp}
+                  malId={info?.anime?.moreInfo?.malId || null}
+                  epNumber={epNumber}
+                  autoplay={autoplay}
+                  autoNext={autoNext}
+                  onAutoplayChange={handleAutoplayChange}
+                  onAutoNextChange={handleAutoNextChange}
                 />
               )}
             </>

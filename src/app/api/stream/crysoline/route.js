@@ -11,7 +11,22 @@
  *   Source mappings  → permanent (SQLite anime_source_map table)
  *   Episode lists    → 10 min
  *   Stream sources   → 2 min
+ *
+ * BUG FIXES applied:
+ *   FIX A — "map" action: mapAnilistSequential was called without the `titles`
+ *     argument, so search/slug-probe fallbacks ALWAYS silently failed for any
+ *     anime not indexed in the Crysoline mapper. Now passes titles fetched from
+ *     AniList when needed.
+ *
+ *   FIX B — "episodes" STALE_MAPPING re-map: mapAnilistToSource was called
+ *     without titles, meaning the re-mapping would never use the search/slug
+ *     fallbacks. Now fetches titles before re-mapping.
+ *
+ *   FIX C — "mapOne" for non-animegg sources: titles were only fetched when
+ *     sourceId === "animegg". The search fallback (Step 2 in mapAnilistToSource)
+ *     applies to ALL sources, so titles must be fetched regardless of sourceId.
  */
+
 import { NextResponse } from "next/server";
 import {
   getCachedAsync, setCachedAsync,
@@ -29,6 +44,17 @@ import { getAniListEpisodeMeta } from "@/lib/anilist";
 
 // Increase Vercel serverless function timeout — sequential mapping needs more than the 10s default
 export const maxDuration = 60;
+
+// ── Helper: fetch AniList titles for fallback mapping ─────────────────────────
+// Returns [] instead of throwing so callers don't need try/catch.
+async function fetchTitles(anilistId) {
+  try {
+    const meta = await getAniListEpisodeMeta(anilistId);
+    return (meta.allTitles || []).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
 
 export async function POST(request) {
   try {
@@ -53,14 +79,11 @@ export async function POST(request) {
         const cached   = await getCachedAsync(cacheKey);
         if (cached && cached.found !== false) return ok({ ...cached, fromCache: "redis" });
 
-        // Resolve titles for fallback mapping (AnimeGG title-slug derivation).
-        // Use titles passed in body first; if absent fetch from AniList (adds ~200ms).
+        // FIX C: Fetch titles for ALL sources, not just animegg.
+        // The search fallback (Step 2 in mapAnilistToSource) applies to every source.
         let titles = Array.isArray(bodyTitles) ? bodyTitles.filter(Boolean) : [];
-        if (titles.length === 0 && sourceId === "animegg") {
-          try {
-            const meta = await getAniListEpisodeMeta(anilistId);
-            titles = (meta.allTitles || []).filter(Boolean);
-          } catch { /* fallback silently */ }
+        if (titles.length === 0) {
+          titles = await fetchTitles(anilistId);
         }
 
         const mappedId = await mapAnilistToSource(anilistId, sourceId, titles);
@@ -71,8 +94,7 @@ export async function POST(request) {
           saveSourceMapping(anilistId, sourceId, mappedId).catch(() => {});
           setCachedAsync(cacheKey, result, 86400).catch(() => {});
         } else {
-          // Cache "not found" for 1h to avoid hammering — but don't cache permanently
-          // so it can be retried after Crysoline indexes new anime
+          // Cache "not found" for 1h — avoids hammering, allows retry after Crysoline indexes
           setCachedAsync(cacheKey, result, 3600).catch(() => {});
         }
         return ok(result);
@@ -94,7 +116,10 @@ export async function POST(request) {
 
         let newMap = new Map();
         if (needApiIds.length > 0) {
-          newMap = await mapAnilistSequential(anilistId, needApiIds, 350);
+          // FIX A: Fetch titles BEFORE mapAnilistSequential so search/slug fallbacks work.
+          // Without titles, any anime not in the Crysoline mapper index silently returns null.
+          const titles = await fetchTitles(anilistId);
+          newMap = await mapAnilistSequential(anilistId, needApiIds, titles, 350);
           for (const [sid, mid] of newMap) {
             saveSourceMapping(anilistId, sid, mid).catch(() => {});
           }
@@ -132,21 +157,19 @@ export async function POST(request) {
         let episodes = await getEpisodesFromSource(sourceId, mappedId);
 
         // ── Stale mapping detected (upstream returned 404) ────────────────
-        // The slug saved in DB is outdated. Delete it, re-map, and retry once.
         if (episodes === STALE_MAPPING) {
           console.log(`[crysoline] stale mapping for ${sourceId}:${mappedId} — re-mapping`);
 
           if (anilistId) {
-            // Purge the bad mapping from DB and memory cache
             await deleteSourceMapping(anilistId, sourceId).catch(() => {});
             await setCachedAsync(`cryo_map1:${anilistId}:${sourceId}`, { __purged: true }, 1).catch(() => {});
 
-            // Re-fetch the correct mapped ID from Crysoline
-            const freshMappedId = await mapAnilistToSource(anilistId, sourceId);
+            // FIX B: Fetch titles before re-mapping so fallbacks work.
+            const titles = await fetchTitles(anilistId);
+            const freshMappedId = await mapAnilistToSource(anilistId, sourceId, titles);
 
             if (freshMappedId && freshMappedId !== mappedId) {
               console.log(`[crysoline] re-mapped ${sourceId}: ${mappedId} → ${freshMappedId}`);
-              // Persist the fresh mapping
               saveSourceMapping(anilistId, sourceId, freshMappedId).catch(() => {});
               setCachedAsync(`cryo_map1:${anilistId}:${sourceId}`, {
                 sourceId, mappedId: freshMappedId,
@@ -154,14 +177,13 @@ export async function POST(request) {
                 found: true,
               }, 86400).catch(() => {});
 
-              // Retry episode fetch with fresh ID
               episodes = await getEpisodesFromSource(sourceId, freshMappedId);
-              if (episodes === STALE_MAPPING) episodes = []; // give up if still bad
+              if (episodes === STALE_MAPPING) episodes = [];
             } else {
-              episodes = []; // can't re-map — source genuinely doesn't have this anime
+              episodes = [];
             }
           } else {
-            episodes = []; // no anilistId to re-map with — return empty gracefully
+            episodes = [];
           }
         }
 
@@ -186,7 +208,7 @@ export async function POST(request) {
         return ok(result);
       }
 
-      // ── SOURCES (FIXED) ───────────────────────────────────────────────
+      // ── SOURCES ───────────────────────────────────────────────────────
       case "sources": {
         try {
           const { sourceId, mappedId, episodeId, subType = "", server = "" } = body;

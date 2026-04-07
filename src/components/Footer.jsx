@@ -1,3 +1,5 @@
+"use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./Footer.module.css";
 
@@ -39,10 +41,72 @@ const SOCIAL_LINKS = [
   },
 ];
 
+// APIs to check
+const API_CHECKS = [
+  { id: "anilist",    label: "AniList",     url: "https://graphql.anilist.co",           method: "GET" },
+  { id: "crysoline",  label: "Crysoline",   url: "https://api.crysoline.moe/health",      method: "GET" },
+  { id: "aniskip",    label: "AniSkip",     url: "https://api.aniskip.com/v2/skip-times/1/1?types[]=op", method: "GET" },
+  { id: "anizone",    label: "AniZone",     url: "https://anizone.to",                   method: "GET" },
+];
+
+function useSiteStatus() {
+  const [statuses, setStatuses] = useState({});
+  const [checked,  setChecked]  = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkAll() {
+      const results = {};
+
+      await Promise.allSettled(
+        API_CHECKS.map(async (api) => {
+          const start = Date.now();
+          try {
+            // Use our proxy to avoid CORS — just check if it responds
+            const proxied = `/api/proxy?url=${encodeURIComponent(api.url)}`;
+            const res = await fetch(proxied, { signal: AbortSignal.timeout(6000) });
+            const latency = Date.now() - start;
+            results[api.id] = {
+              up:      res.ok || res.status < 500,
+              latency,
+              code:    res.status,
+            };
+          } catch {
+            results[api.id] = { up: false, latency: null, code: null };
+          }
+        })
+      );
+
+      if (!cancelled) {
+        setStatuses(results);
+        setChecked(true);
+      }
+    }
+
+    checkAll();
+    // Recheck every 5 minutes
+    const interval = setInterval(checkAll, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  return { statuses, checked };
+}
+
+function StatusDot({ up, checking }) {
+  if (checking) return <span className={styles.dotChecking} />;
+  return <span className={up ? styles.dotUp : styles.dotDown} />;
+}
+
 export default function Footer() {
+  const { statuses, checked } = useSiteStatus();
+
+  const allUp    = checked && API_CHECKS.every(a => statuses[a.id]?.up !== false);
+  const anyDown  = checked && API_CHECKS.some(a => statuses[a.id]?.up === false);
+  const checking = !checked;
+
   return (
     <footer className={styles.footer}>
-      {/* Ambient glow line */}
       <div className={styles.glowLine} aria-hidden="true" />
 
       <div className={styles.inner}>
@@ -64,41 +128,36 @@ export default function Footer() {
             No account required. Always free.
           </p>
 
-          {/* Status pill */}
-          <div className={styles.statusPill}>
-            <span className={styles.statusDot} />
-            <span>All systems operational</span>
+          {/* Overall status pill */}
+          <div className={`${styles.statusPill} ${anyDown ? styles.pillDown : checking ? styles.pillChecking : styles.pillUp}`}>
+            <StatusDot up={allUp} checking={checking} />
+            <span>
+              {checking ? "Checking services…" : allUp ? "All systems operational" : "Some services degraded"}
+            </span>
           </div>
 
           {/* Social buttons */}
           <div className={styles.socialRow}>
             {SOCIAL_LINKS.map(s => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noreferrer"
-                className={styles.socialBtn}
-                aria-label={s.label}
-              >
+              <a key={s.label} href={s.href} target="_blank" rel="noreferrer"
+                className={styles.socialBtn} aria-label={s.label}>
                 {s.icon}
               </a>
             ))}
           </div>
         </div>
 
-        {/* ── Browse column ────────────────────────────────── */}
+        {/* ── Browse column ─────────────────────────────── */}
         <div className={styles.col}>
           <h4 className={styles.colHeading}>Browse</h4>
           {BROWSE_LINKS.map(l => (
             <Link key={l.href} href={l.href} className={styles.colLink}>
-              <span className={styles.linkArrow}>›</span>
-              {l.label}
+              <span className={styles.linkArrow}>›</span>{l.label}
             </Link>
           ))}
         </div>
 
-        {/* ── Info column ──────────────────────────────────── */}
+        {/* ── Info column ───────────────────────────────── */}
         <div className={styles.col}>
           <h4 className={styles.colHeading}>Info</h4>
           <Link href="/"       className={styles.colLink}><span className={styles.linkArrow}>›</span>Home</Link>
@@ -111,9 +170,32 @@ export default function Footer() {
             <span className={styles.linkArrow}>›</span>AniList
           </a>
         </div>
+
+        {/* ── API Status column ──────────────────────────── */}
+        <div className={styles.col}>
+          <h4 className={styles.colHeading}>API Status</h4>
+          <div className={styles.statusList}>
+            {API_CHECKS.map(api => {
+              const s = statuses[api.id];
+              return (
+                <div key={api.id} className={styles.statusRow}>
+                  <StatusDot up={s?.up} checking={!checked} />
+                  <span className={styles.statusName}>{api.label}</span>
+                  {checked && s && (
+                    <span className={`${styles.statusBadge} ${s.up ? styles.badgeUp : styles.badgeDown}`}>
+                      {s.up ? (s.latency ? `${s.latency}ms` : "OK") : "Down"}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p className={styles.statusNote}>Checked every 5 min</p>
+        </div>
+
       </div>
 
-      {/* ── Bottom bar ────────────────────────────────────── */}
+      {/* ── Bottom bar ─────────────────────────────────── */}
       <div className={styles.bottom}>
         <p className={styles.disclaimer}>
           Animedex does not host any video files. All content is aggregated from

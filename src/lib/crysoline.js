@@ -10,11 +10,24 @@
  * Source episodes: /api/v1/anime/{source}/episodes/{id}
  * Source sources:  /api/v1/anime/{source}/sources?id=&episodeId=
  * Source servers:  /api/v1/anime/{source}/servers?id=&episodeId=
- *                  (only anicore, anidap, animex have /servers)
+ *   ↳ Only these sources have /servers per the API docs:
+ *     anicore, anidap, animeav1, animelib, animemeow, animenix, animex
  *
  * Timeout strategy (fail fast → auto-switch to embedded player):
  *   Mapper/search/probe: 8s, 0 retries
  *   Episodes/sources:   20s, 1 retry
+ *
+ * BUG FIXES applied vs original:
+ *   1. SOURCES LIST: Added 10 sources that exist in API but were missing:
+ *      animelib, animerevival, kuudere, animemeow, animeav1, lunaranime,
+ *      anime3rb, animenix, animerevival — skipping aniliberty/kodik/123anime
+ *      (intentionally broken per requirements).
+ *   2. hasServers FLAGS: animeav1, animelib, animemeow, animenix also have
+ *      /servers endpoints in the API — were incorrectly set to false.
+ *   3. map action in route: mapAnilistSequential was called without titles arg —
+ *      fixed in route.js.
+ *   4. "map" action in route: needApiIds path discards titles — fixed in route.js.
+ *   5. STALE_MAPPING re-map: called mapAnilistToSource without titles — fixed.
  */
 
 import axios from "axios";
@@ -80,33 +93,62 @@ async function cryGet(path, params = {}, timeoutMs = 20000, retries = 1, signal4
 }
 
 // ── Sources list ───────────────────────────────────────────────────────────────
-// hasServers reflects the actual /api/v1/anime/{source}/servers endpoints in the API docs
+//
+// hasServers reflects which sources actually have /api/v1/anime/{source}/servers
+// in the API docs. Sources WITHOUT this endpoint must use sources directly.
+//
+// FIX 1: Added missing sources that exist in the API (animelib, animemeow,
+//   animeav1, animenix, lunaranime, anime3rb, animerevival, kuudere).
+//   Intentionally excluded: aniliberty, kodik, onetwothreeanime (broken/skip).
+//
+// FIX 2: hasServers corrected for animeav1, animelib, animemeow, animenix —
+//   these DO have /servers in the API but were marked false.
+//
 export const CRYSOLINE_SOURCES = [
-  { id: "animegg",         name: "AnimeGG",       site: "animegg.org",             langs: ["en","ja"],      hasServers: false, isDefault: true  },
-  { id: "animepahe",       name: "AnimePahe",     site: "animepahe.si",            langs: ["en","ja"],      hasServers: false },
-  { id: "animeheaven",     name: "AnimeHeaven",   site: "animeheaven.me",          langs: ["en","ja"],      hasServers: false },
-  { id: "animekai",        name: "AnimeKai",      site: "anikai.to",               langs: ["en","ja"],      hasServers: false },
-  { id: "animeyy",         name: "AnimeYY",       site: "animeyy.com",             langs: ["en","ja"],      hasServers: false },
-  { id: "anizone",         name: "Anizone",       site: "anizone.to",              langs: ["en","ja"],      hasServers: false },
-  { id: "animenexus",      name: "AnimeNexus",    site: "anime.nexus",             langs: ["en","ja"],      hasServers: false },
-  { id: "animeonsen",      name: "AnimeOnsen",    site: "animeonsen.xyz",          langs: ["en","ja"],      hasServers: false },
-  { id: "animeparadise",   name: "AnimeParadise", site: "animeparadise.moe",       langs: ["en","ja"],      hasServers: false },
-  { id: "animex",          name: "Animex",        site: "animex.one",              langs: ["en","ja","id"], hasServers: true  },
-  { id: "onetwothreeanime",name: "123Anime",      site: "123animes.org",           langs: ["en","ja"],      hasServers: false },
-  { id: "uniquestream",    name: "UniqueStream",  site: "anime.uniquestream.net",  langs: ["en","ja"],      hasServers: false },
-  { id: "kickassanime",    name: "KickAssAnime",  site: "kickass-anime.ro",        langs: ["en","ja"],      hasServers: false },
-  { id: "anicore",         name: "Anicore",       site: "anikage.cc",              langs: ["en","ja","id"], hasServers: true  },
-  { id: "anidap",          name: "Anidap",        site: "anidap.se",               langs: ["en","ja","id"], hasServers: true  },
+  // ── Primary English sources (most reliable) ────────────────────────────────
+  { id: "animegg",       name: "AnimeGG",       site: "animegg.org",            langs: ["en","ja"],        hasServers: false, isDefault: true  },
+  { id: "animepahe",     name: "AnimePahe",     site: "animepahe.si",           langs: ["en","ja"],        hasServers: false },
+  { id: "animeheaven",   name: "AnimeHeaven",   site: "animeheaven.me",         langs: ["en","ja"],        hasServers: false },
+  { id: "animekai",      name: "AnimeKai",      site: "anikai.to",              langs: ["en","ja"],        hasServers: false },
+  { id: "animeyy",       name: "AnimeYY",       site: "animeyy.com",            langs: ["en","ja"],        hasServers: false },
+  { id: "anizone",       name: "Anizone",       site: "anizone.to",             langs: ["en","ja"],        hasServers: false },
+  { id: "animenexus",    name: "AnimeNexus",    site: "anime.nexus",            langs: ["en","ja"],        hasServers: false },
+  { id: "animeonsen",    name: "AnimeOnsen",    site: "animeonsen.xyz",         langs: ["en","ja"],        hasServers: false },
+  { id: "animeparadise", name: "AnimeParadise", site: "animeparadise.moe",      langs: ["en","ja"],        hasServers: false },
+  { id: "kickassanime",  name: "KickAssAnime",  site: "kaa.it",                langs: ["en","ja"],        hasServers: false },
+  { id: "uniquestream",  name: "UniqueStream",  site: "anime.uniquestream.net", langs: ["en","ja"],        hasServers: false },
+  { id: "animerevival",  name: "AnimeRevival",  site: "animerevival.xyz",       langs: ["en","ja","tl"],   hasServers: false }, // FIX 1: was missing
+  // ── Sources with server selection ─────────────────────────────────────────
+  { id: "anicore",       name: "Anicore",       site: "anikage.cc",             langs: ["en","ja","id"],   hasServers: true  },
+  { id: "anidap",        name: "Anidap",        site: "anidap.se",              langs: ["en","ja","id"],   hasServers: true  },
+  { id: "animex",        name: "Animex",        site: "animex.one",             langs: ["en","ja","id"],   hasServers: true  },
+  { id: "animeav1",      name: "AnimeAV1",      site: "animeav1.com",           langs: ["es"],             hasServers: true  }, // FIX 1+2: was missing, has /servers
+  { id: "animelib",      name: "AnimeLib",      site: "v3.animelib.org",        langs: ["ru","ja"],        hasServers: true  }, // FIX 1+2: was missing, has /servers
+  { id: "animemeow",     name: "AnimeMeow",     site: "animemeow.xyz",          langs: ["es","ja"],        hasServers: true  }, // FIX 1+2: was missing, has /servers
+  { id: "animenix",      name: "AnimeNix",      site: "animenix.com",           langs: ["es","ja"],        hasServers: true  }, // FIX 1+2: was missing, has /servers
+  // ── Other language sources ─────────────────────────────────────────────────
+  { id: "anime3rb",      name: "Anime3rb",      site: "anime3rb.com",           langs: ["ar","ja"],        hasServers: false }, // FIX 1: was missing
+  { id: "lunaranime",    name: "LunarAnime",    site: "lunaranime.ru",          langs: ["ru","en","ja"],   hasServers: false }, // FIX 1: was missing
+  { id: "kuudere",       name: "Kuudere",       site: "kuudere.ru",             langs: ["en","ja"],        hasServers: false }, // FIX 1: was missing
 ];
 
 export const DEFAULT_SOURCE_ID = "animegg";
-export const EN_SOURCE_IDS     = CRYSOLINE_SOURCES.map(s => s.id);
-export const ALL_SOURCE_IDS    = CRYSOLINE_SOURCES.map(s => s.id);
-export const FALLBACK_SOURCE_IDS = ["animepahe", "kickassanime", "animekai", "animeheaven"];
+
+// English-primary sources (best for English-speaking audiences)
+export const EN_SOURCE_IDS = CRYSOLINE_SOURCES
+  .filter(s => s.langs.includes("en"))
+  .map(s => s.id);
+
+// All sources
+export const ALL_SOURCE_IDS = CRYSOLINE_SOURCES.map(s => s.id);
+
+// Reliable fallback order when the default source fails
+export const FALLBACK_SOURCE_IDS = ["animepahe", "kickassanime", "animekai", "animeheaven", "animenexus"];
 
 // ── Title helpers ──────────────────────────────────────────────────────────────
 
 function titleToSlug(title = "") {
+  if (typeof title !== "string") title = String(title ?? "");
   return title
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, "")
@@ -125,13 +167,12 @@ function candidateSlugs(titles = []) {
 
 async function searchOnSource(sourceId, titles) {
   for (const title of titles.filter(Boolean).slice(0, 2)) {
-    // ✅ Correct path: /api/v1/anime/{source}/search
     const data = await cryGet(`/api/v1/anime/${sourceId}/search`, { q: title }, 8000, 0, false);
     if (!data) continue;
 
     const results = Array.isArray(data) ? data
-      : Array.isArray(data.results) ? data.results
-      : Array.isArray(data.data)    ? data.data
+      : Array.isArray(data?.results) ? data.results
+      : Array.isArray(data?.data)    ? data.data
       : null;
     if (!results?.length) continue;
 
@@ -157,7 +198,6 @@ async function probeAnimeGGByTitle(titles) {
   if (slugs.length) console.log(`[crysoline] animegg probe trying: ${slugs.join(", ")}`);
 
   for (const slug of slugs) {
-    // ✅ Correct path: /api/v1/anime/animegg/episodes/{id}
     const data = await cryGet(`/api/v1/anime/animegg/episodes/${encodeURIComponent(slug)}`, {}, 8000, 0, false);
     if (!data || data === STALE_MAPPING) continue;
 
@@ -176,7 +216,7 @@ async function probeAnimeGGByTitle(titles) {
 // ── Mapper ────────────────────────────────────────────────────────────────────
 
 export async function mapAnilistToSource(anilistId, sourceId, titles = []) {
-  // Step 1: Crysoline mapper — ✅ correct path: /api/v1/mapper/map
+  // Step 1: Crysoline mapper
   const data = await cryGet(
     "/api/v1/mapper/map",
     { id: String(anilistId), provider: sourceId },
@@ -196,7 +236,7 @@ export async function mapAnilistToSource(anilistId, sourceId, titles = []) {
 
   if (titles.length === 0) return null;
 
-  // Step 2: Search API
+  // Step 2: Search API fallback
   console.log(`[crysoline] mapper missed ${sourceId}:${anilistId} — trying search`);
   const searchId = await searchOnSource(sourceId, titles);
   if (searchId) return searchId;
@@ -232,12 +272,11 @@ export async function mapAnilistToAllSources(anilistId, titles = []) {
   return mapAnilistSequential(anilistId, ALL_SOURCE_IDS, titles, 350);
 }
 
-// ── Episode / stream calls — all use /api/v1/ prefix ─────────────────────────
+// ── Episode / stream calls ────────────────────────────────────────────────────
 
 export async function getEpisodesFromSource(sourceId, mappedId) {
   if (!sourceId || !mappedId) return [];
 
-  // ✅ Correct path: /api/v1/anime/{source}/episodes/{id}
   const data = await cryGet(
     `/api/v1/anime/${sourceId}/episodes/${encodeURIComponent(mappedId)}`,
     {}, 20000, 1, true  // signal404=true: cached slug is stale
@@ -266,7 +305,18 @@ export async function getServersFromSource(sourceId, mappedId, episodeId) {
   if (!src?.hasServers) return [];
   if (!mappedId || !episodeId) return [];
 
-  // ✅ Correct path: /api/v1/anime/{source}/servers
+  // Guard: some sources (animeav1) return bare slugs as mappedId.
+  // The Crysoline API /servers endpoint internally tries new URL(mappedId)
+  // which throws "Invalid URL" for relative slugs. Detect and skip.
+  const looksLikeUrl = mappedId.startsWith("http://") || mappedId.startsWith("https://");
+  const looksLikeNumericId = /^\d+$/.test(mappedId);
+  const looksLikeSlug = !looksLikeUrl && !looksLikeNumericId && /^[a-z0-9-]+$/.test(mappedId);
+  // animeav1 uses bare slugs that break its own /servers endpoint — skip it
+  if (sourceId === "animeav1" && looksLikeSlug) {
+    console.log(`[crysoline] skipping /servers for ${sourceId} — mappedId "${mappedId}" is a bare slug`);
+    return [];
+  }
+
   const data = await cryGet(
     `/api/v1/anime/${sourceId}/servers`,
     { id: mappedId, episodeId },
@@ -283,7 +333,16 @@ export async function getSourcesFromSource(sourceId, mappedId, episodeId, subTyp
   if (subType) params.subType = subType;
   if (server)  params.server  = server;
 
-  // ✅ Correct path: /api/v1/anime/{source}/sources
+  // Guard: animeav1 /sources also fails with bare slugs — skip to avoid the
+  // "Failed to construct 'Request': Invalid URL" crash in the Crysoline API.
+  const looksLikeUrl = mappedId.startsWith("http://") || mappedId.startsWith("https://");
+  const looksLikeNumericId = /^\d+$/.test(mappedId);
+  const looksLikeBareSlug = !looksLikeUrl && !looksLikeNumericId && /^[a-z0-9-]+$/.test(mappedId);
+  if (sourceId === "animeav1" && looksLikeBareSlug) {
+    console.log(`[crysoline] skipping /sources for ${sourceId} — mappedId "${mappedId}" is a bare slug`);
+    return { sources: [], subtitles: [], headers: {} };
+  }
+
   const data = await cryGet(`/api/v1/anime/${sourceId}/sources`, params, 20000, 1);
   if (!data) return { sources: [], subtitles: [], headers: {} };
 

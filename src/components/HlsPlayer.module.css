@@ -1,41 +1,252 @@
+/* ═══════════════════════════════════════════════════════════
+   HlsPlayer — full-featured anime player styles
+   ═══════════════════════════════════════════════════════════ */
+
 .wrapper {
   position: relative;
-  width: 100%; aspect-ratio: 16/9;
-  background: #000; border-radius: var(--r-lg);
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: var(--r-lg, 12px);
   overflow: hidden;
+  user-select: none;
 }
+
 .video {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: block;
 }
-.loadOv, .errorOv, .empty {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 12px; background: var(--bg-card);
-  text-align: center; padding: 24px; z-index: 2;
-}
-.loadOv p, .errorOv p, .empty p { font-size: 13px; color: var(--text-2); }
-.empty span, .errorOv span { font-size: 40px; }
-.empty .spinner, .loadOv .spinner { margin: 0; }
 
+/* ── Overlays ─────────────────────────────────────────────── */
+
+.loadOv,
+.errorOv,
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--bg-card, #13141a);
+  text-align: center;
+  padding: 24px;
+  z-index: 10;
+}
+.loadOv p,
+.errorOv p,
+.empty p { font-size: 13px; color: var(--text-2, #888); }
+.empty span,
+.errorOv span { font-size: 40px; }
+
+/* ── Auto-next countdown ─────────────────────────────────── */
+
+.countdownOv {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 24px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.countdownCard {
+  background: rgba(10, 11, 15, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 20px 28px;
+  text-align: center;
+  pointer-events: all;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  min-width: 180px;
+}
+.countdownLabel {
+  font-size: 12px;
+  color: var(--text-2, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 8px;
+}
+.countdownNum {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--accent, #6c63ff);
+  line-height: 1;
+  margin-bottom: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.countdownBtns {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.cdPlay {
+  padding: 7px 16px;
+  border-radius: 99px;
+  background: var(--accent, #6c63ff);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.cdPlay:hover { opacity: 0.85; }
+.cdCancel {
+  padding: 7px 16px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-2, #888);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.cdCancel:hover { background: rgba(255, 255, 255, 0.14); }
+
+/* ── AniSkip banner ───────────────────────────────────────── */
+
+.skipBanner {
+  position: absolute;
+  bottom: 72px;
+  right: 20px;
+  z-index: 25;
+  animation: fadeSlideUp 0.25s ease;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.skipBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 99px;
+  background: rgba(10, 11, 15, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.skipBtn:hover {
+  background: var(--accent, #6c63ff);
+  border-color: var(--accent, #6c63ff);
+}
+
+/* ── Top control bar ──────────────────────────────────────── */
+
+.topBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 100%);
+  z-index: 15;
+  opacity: 0;
+  transition: opacity 0.25s;
+  flex-wrap: wrap;
+}
+.topBar.barVisible { opacity: 1; }
+.wrapper:hover .topBar { opacity: 1; }
+
+/* Prev/Next nav */
+.epNav {
+  display: flex;
+  gap: 4px;
+}
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.navBtn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+.navBtn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Autoplay / Auto-next toggles */
+.toggleRow {
+  display: flex;
+  gap: 6px;
+}
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.toggle:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.toggleOn {
+  background: rgba(108, 99, 255, 0.25);
+  color: var(--accent, #6c63ff);
+  border: 1px solid rgba(108, 99, 255, 0.4);
+}
+.toggleDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Quality / subtitle pill bars */
 .qualityBar {
-  position: absolute; top: 10px; right: 10px;
-  display: flex; align-items: center; gap: 5px;
-  background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
-  border-radius: 99px; padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  border-radius: 99px;
+  padding: 4px 8px;
   flex-wrap: wrap;
 }
 .qualityLabel {
-  font-size: 11px; color: rgba(255,255,255,.6);
-  font-weight: 600; text-transform: uppercase;
-  letter-spacing: .06em; margin-right: 4px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 2px;
 }
 .qualBtn {
-  padding: 3px 10px; border-radius: 99px;
-  font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,.7);
-  transition: .15s; cursor: pointer;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+  transition: color 0.15s, background 0.15s;
+  cursor: pointer;
 }
 .qualBtn:hover  { color: #fff; }
-.qualActive     { background: var(--accent); color: #fff !important; }
+.qualActive     { background: var(--accent, #6c63ff); color: #fff !important; }

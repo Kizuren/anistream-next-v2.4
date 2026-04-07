@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Prevent stale .next cache causing "Unexpected end of JSON input" on Windows
-  // This cleans the dist dir on every build start
   cleanDistDir: true,
 
   images: {
@@ -13,6 +11,7 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
+
   async headers() {
     const frameHosts = [
       "https://autoembed.co", "https://player.autoembed.app",
@@ -29,8 +28,20 @@ const nextConfig = {
       "https://anilist.co",
     ].join(" ");
 
-    // All CDN/stream fetches go through /api/proxy server-side,
-    // so the browser only connects to 'self' for media — no CDN domains needed.
+    // PROBLEM 1 FIX — CSP connect-src:
+    // hls.js fetches .key (AES-128 encryption keys) and EXT-X-MAP URIs
+    // directly via XHR before the proxy can intercept them. Even though the
+    // m3u8 manifest has its URLs rewritten to /api/proxy, hls.js resolves
+    // the #EXT-X-KEY URI from the already-fetched (proxied) text and issues a
+    // new XHR — which the browser blocks because the target host isn't in CSP.
+    //
+    // The correct fix is NOT to whitelist every CDN (impossible, infinite list).
+    // Instead we intercept .key fetches in the HLS loader (see HlsPlayer.jsx fix).
+    // But as a belt-and-suspenders measure, 'self' covers /api/proxy which is the
+    // only endpoint hls.js should be hitting after the manifest rewrite fix.
+    //
+    // The remaining connect-src entries are for direct API calls that legitimately
+    // happen in the browser (AniList, TMDB, auth).
     const connectSrc = [
       "'self'",
       "https://graphql.anilist.co",
@@ -47,6 +58,8 @@ const nextConfig = {
       "https://*.theanimecommunity.com",
     ].join(" ");
 
+    // media-src must include blob: for hls.js MSE playback
+    // and 'self' so the video element can load from /api/proxy (same origin).
     return [
       {
         source: "/(.*)",
@@ -59,9 +72,12 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.disqus.com",
               "font-src 'self' https://fonts.gstatic.com https://theanimecommunity.com",
               "img-src 'self' data: https: blob:",
+              // PROBLEM 1 FIX: blob: is required for hls.js MSE; 'self' covers /api/proxy
               "media-src 'self' blob: data:",
               `frame-src ${frameHosts}`,
               `connect-src ${connectSrc}`,
+              // PROBLEM 3 FIX: worker-src for hls.js web worker
+              "worker-src 'self' blob:",
             ].join("; "),
           },
         ],
@@ -75,7 +91,6 @@ const nextConfig = {
         ],
       },
       {
-        // The proxy route needs to pass through Range headers for video seeking
         source: "/api/proxy",
         headers: [
           { key: "Access-Control-Allow-Origin",  value: "*" },
