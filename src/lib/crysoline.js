@@ -104,32 +104,45 @@ async function cryGet(path, params = {}, timeoutMs = 20000, retries = 1, signal4
 // FIX 2: hasServers corrected for animeav1, animelib, animemeow, animenix —
 //   these DO have /servers in the API but were marked false.
 //
+/**
+ * SOURCE MANAGEMENT (Fix 3)
+ * ─────────────────────────
+ * Active sources: AnimeGG (default), AnimePahe, Anizone.
+ * All other sources are commented out — NOT deleted — so they can be
+ * re-enabled at any time by removing the comment markers.
+ *
+ * To re-enable a source:
+ *   1. Uncomment the line below.
+ *   2. Add its id to FALLBACK_SOURCE_IDS if you want it in the auto-load race.
+ */
 export const CRYSOLINE_SOURCES = [
-  // ── Primary English sources (most reliable) ────────────────────────────────
-  { id: "animegg",       name: "AnimeGG",       site: "animegg.org",            langs: ["en","ja"],        hasServers: false, isDefault: true  },
-  { id: "animepahe",     name: "AnimePahe",     site: "animepahe.si",           langs: ["en","ja"],        hasServers: false },
-  { id: "animeheaven",   name: "AnimeHeaven",   site: "animeheaven.me",         langs: ["en","ja"],        hasServers: false },
-  { id: "animekai",      name: "AnimeKai",      site: "anikai.to",              langs: ["en","ja"],        hasServers: false },
-  { id: "animeyy",       name: "AnimeYY",       site: "animeyy.com",            langs: ["en","ja"],        hasServers: false },
-  { id: "anizone",       name: "Anizone",       site: "anizone.to",             langs: ["en","ja"],        hasServers: false },
-  { id: "animenexus",    name: "AnimeNexus",    site: "anime.nexus",            langs: ["en","ja"],        hasServers: false },
-  { id: "animeonsen",    name: "AnimeOnsen",    site: "animeonsen.xyz",         langs: ["en","ja"],        hasServers: false },
-  { id: "animeparadise", name: "AnimeParadise", site: "animeparadise.moe",      langs: ["en","ja"],        hasServers: false },
-  { id: "kickassanime",  name: "KickAssAnime",  site: "kaa.it",                langs: ["en","ja"],        hasServers: false },
-  { id: "uniquestream",  name: "UniqueStream",  site: "anime.uniquestream.net", langs: ["en","ja"],        hasServers: false },
-  { id: "animerevival",  name: "AnimeRevival",  site: "animerevival.xyz",       langs: ["en","ja","tl"],   hasServers: false }, // FIX 1: was missing
-  // ── Sources with server selection ─────────────────────────────────────────
-  { id: "anicore",       name: "Anicore",       site: "anikage.cc",             langs: ["en","ja","id"],   hasServers: true  },
-  { id: "anidap",        name: "Anidap",        site: "anidap.se",              langs: ["en","ja","id"],   hasServers: true  },
-  { id: "animex",        name: "Animex",        site: "animex.one",             langs: ["en","ja","id"],   hasServers: true  },
-  { id: "animeav1",      name: "AnimeAV1",      site: "animeav1.com",           langs: ["es"],             hasServers: true  }, // FIX 1+2: was missing, has /servers
-  { id: "animelib",      name: "AnimeLib",      site: "v3.animelib.org",        langs: ["ru","ja"],        hasServers: true  }, // FIX 1+2: was missing, has /servers
-  { id: "animemeow",     name: "AnimeMeow",     site: "animemeow.xyz",          langs: ["es","ja"],        hasServers: true  }, // FIX 1+2: was missing, has /servers
-  { id: "animenix",      name: "AnimeNix",      site: "animenix.com",           langs: ["es","ja"],        hasServers: true  }, // FIX 1+2: was missing, has /servers
-  // ── Other language sources ─────────────────────────────────────────────────
-  { id: "anime3rb",      name: "Anime3rb",      site: "anime3rb.com",           langs: ["ar","ja"],        hasServers: false }, // FIX 1: was missing
-  { id: "lunaranime",    name: "LunarAnime",    site: "lunaranime.ru",          langs: ["ru","en","ja"],   hasServers: false }, // FIX 1: was missing
-  { id: "kuudere",       name: "Kuudere",       site: "kuudere.ru",             langs: ["en","ja"],        hasServers: false }, // FIX 1: was missing
+  // ── ACTIVE SOURCES ────────────────────────────────────────────────────────
+  { id: "animegg",       name: "AnimeGG",       site: "animegg.org",   langs: ["en","ja"], hasServers: false, isDefault: true },
+  { id: "animepahe",     name: "AnimePahe",     site: "animepahe.si",  langs: ["en","ja"], hasServers: false },
+  { id: "anizone",       name: "Anizone",        site: "anizone.to",    langs: ["en","ja"], hasServers: false },
+
+  // ── INACTIVE SOURCES (commented out — re-enable as needed) ───────────────
+  // { id: "animeheaven",   name: "AnimeHeaven",   site: "animeheaven.me",         langs: ["en","ja"],        hasServers: false },
+  // { id: "animekai",      name: "AnimeKai",      site: "anikai.to",              langs: ["en","ja"],        hasServers: false },
+  // { id: "animeyy",       name: "AnimeYY",       site: "animeyy.com",            langs: ["en","ja"],        hasServers: false },
+  // { id: "animenexus",    name: "AnimeNexus",    site: "anime.nexus",            langs: ["en","ja"],        hasServers: false },
+  // { id: "animeonsen",    name: "AnimeOnsen",    site: "animeonsen.xyz",         langs: ["en","ja"],        hasServers: false },
+  // { id: "animeparadise", name: "AnimeParadise", site: "animeparadise.moe",      langs: ["en","ja"],        hasServers: false },
+  // { id: "kickassanime",  name: "KickAssAnime",  site: "kaa.it",                langs: ["en","ja"],        hasServers: false },
+  // { id: "uniquestream",  name: "UniqueStream",  site: "anime.uniquestream.net", langs: ["en","ja"],        hasServers: false },
+  // { id: "animerevival",  name: "AnimeRevival",  site: "animerevival.xyz",       langs: ["en","ja","tl"],   hasServers: false },
+  // ── Sources with server selection ────────────────────────────────────────
+  // { id: "anicore",       name: "Anicore",       site: "anikage.cc",             langs: ["en","ja","id"],   hasServers: true  },
+  // { id: "anidap",        name: "Anidap",        site: "anidap.se",              langs: ["en","ja","id"],   hasServers: true  },
+  // { id: "animex",        name: "Animex",        site: "animex.one",             langs: ["en","ja","id"],   hasServers: true  },
+  // { id: "animeav1",      name: "AnimeAV1",      site: "animeav1.com",           langs: ["es"],             hasServers: true  },
+  // { id: "animelib",      name: "AnimeLib",      site: "v3.animelib.org",        langs: ["ru","ja"],        hasServers: true  },
+  // { id: "animemeow",     name: "AnimeMeow",     site: "animemeow.xyz",          langs: ["es","ja"],        hasServers: true  },
+  // { id: "animenix",      name: "AnimeNix",      site: "animenix.com",           langs: ["es","ja"],        hasServers: true  },
+  // ── Other language sources ────────────────────────────────────────────────
+  // { id: "anime3rb",      name: "Anime3rb",      site: "anime3rb.com",           langs: ["ar","ja"],        hasServers: false },
+  // { id: "lunaranime",    name: "LunarAnime",    site: "lunaranime.ru",          langs: ["ru","en","ja"],   hasServers: false },
+  // { id: "kuudere",       name: "Kuudere",       site: "kuudere.ru",             langs: ["en","ja"],        hasServers: false },
 ];
 
 export const DEFAULT_SOURCE_ID = "animegg";
@@ -139,11 +152,19 @@ export const EN_SOURCE_IDS = CRYSOLINE_SOURCES
   .filter(s => s.langs.includes("en"))
   .map(s => s.id);
 
-// All sources
+// All active source IDs
 export const ALL_SOURCE_IDS = CRYSOLINE_SOURCES.map(s => s.id);
 
-// Reliable fallback order when the default source fails
-export const FALLBACK_SOURCE_IDS = ["animepahe", "kickassanime", "animekai", "animeheaven", "animenexus"];
+// Fallback order when the default (AnimeGG) source fails.
+// Only active sources are listed here — inactive ones are commented out.
+export const FALLBACK_SOURCE_IDS = [
+  "animepahe",
+  "anizone",
+  // "kickassanime",  // re-enable when source is re-activated
+  // "animekai",      // re-enable when source is re-activated
+  // "animeheaven",   // re-enable when source is re-activated
+  // "animenexus",    // re-enable when source is re-activated
+];
 
 // ── Title helpers ──────────────────────────────────────────────────────────────
 

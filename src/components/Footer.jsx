@@ -42,11 +42,17 @@ const SOCIAL_LINKS = [
 ];
 
 // APIs to check
+// FIX (Footer): Only AniList and Crysoline are shown. Others are commented out
+// to keep the footer clean. Re-enable by un-commenting and adding back to array.
 const API_CHECKS = [
-  { id: "anilist",    label: "AniList",     url: "https://graphql.anilist.co",           method: "GET" },
-  { id: "crysoline",  label: "Crysoline",   url: "https://api.crysoline.moe/health",      method: "GET" },
-  { id: "aniskip",    label: "AniSkip",     url: "https://api.aniskip.com/v2/skip-times/1/1?types[]=op", method: "GET" },
-  { id: "anizone",    label: "AniZone",     url: "https://anizone.to",                   method: "GET" },
+  // FIX (AniList 404): GraphQL endpoint only accepts POST with a query body.
+  // A bare GET returns 404. We use a dedicated /api/anilist-ping route instead
+  // of the generic proxy, so we can POST with a minimal introspection query.
+  { id: "anilist",   label: "AniList",   pingUrl: "/api/ping/anilist"   },
+  { id: "crysoline", label: "Crysoline", pingUrl: "/api/ping/crysoline" },
+  // ── Commented-out status checks (re-enable as needed) ────────────────────
+  // { id: "aniskip", label: "AniSkip", pingUrl: "/api/ping/aniskip" },
+  // { id: "anizone", label: "AniZone",  pingUrl: "/api/ping/anizone"  },
 ];
 
 function useSiteStatus() {
@@ -63,9 +69,9 @@ function useSiteStatus() {
         API_CHECKS.map(async (api) => {
           const start = Date.now();
           try {
-            // Use our proxy to avoid CORS — just check if it responds
-            const proxied = `/api/proxy?url=${encodeURIComponent(api.url)}`;
-            const res = await fetch(proxied, { signal: AbortSignal.timeout(6000) });
+            // Each API has a dedicated ping route that uses the correct method/body.
+            // This avoids routing GraphQL POST calls through a GET-only proxy.
+            const res = await fetch(api.pingUrl, { signal: AbortSignal.timeout(8000) });
             const latency = Date.now() - start;
             results[api.id] = {
               up:      res.ok || res.status < 500,

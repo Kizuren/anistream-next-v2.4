@@ -250,3 +250,29 @@
 }
 .qualBtn:hover  { color: #fff; }
 .qualActive     { background: var(--accent, #6c63ff); color: #fff !important; }
+
+
+/* subBar: subtitle track selector — same visual style as qualityBar */
+.subBar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  border-radius: 99px;
+  padding: 4px 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Codec badge — shown when HEVC fallback activates or ASS-only subs detected ── */
+.codecBadge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  white-space: nowrap;
+}

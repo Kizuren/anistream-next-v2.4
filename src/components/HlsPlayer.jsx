@@ -1,17 +1,26 @@
 /**
  * HlsPlayer — feature-complete anime video player
  *
- * Fixes applied vs previous version:
- *  - bufferAddCodecError: try switching quality level on unsupported codec (AnimePahe HEVC)
- *  - audioTrackLoadError: treated as non-fatal (IP-pinned CDN on AnimeNexus) — video continues
- *  - manifestParsingError / manifestLoadError 403: clear user-facing messages
+ * Architecture: raw hls.js bound to a React <video> ref.
+ * We do NOT use Video.js — it mutates the DOM in ways that conflict with
+ * React's reconciler (insertBefore NotFoundError, element-not-in-DOM warnings)
+ * and its dynamic stylesheet injection violates the site's CSP policy.
+ * hls.js alone gives us everything we need with zero DOM side-effects.
  *
- * New features:
- *  - AniSkip: fetches OP/ED timestamps, shows Skip Opening/Ending button
- *  - Prev/Next episode buttons
- *  - Autoplay toggle (persisted via parent)
- *  - Auto-next toggle with 5-second countdown overlay
- *  - Quality + subtitle track selectors
+ * HEVC/H.265 support (Fix 2):
+ *   On bufferAddCodecError, scan all quality levels for one with a different
+ *   codec and switch to it automatically (e.g. H.264 fallback when HEVC fails).
+ *   A small badge shows the active codec when a fallback is active.
+ *
+ * AniSkip fix:
+ *   Fetches skip times through /api/proxy to avoid CORS rejection from
+ *   api.aniskip.com (which sends no Access-Control-Allow-Origin header).
+ *
+ * Subtitle fix:
+ *   .ass / .ssa files are not supported by the browser <track> element or
+ *   hls.js. They are filtered out — only .vtt and .srt tracks are passed
+ *   to <track>, since browsers convert .srt to WebVTT internally. A badge
+ *   is shown when ASS-only subs are present so the user knows.
  */
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -45,32 +54,75 @@ function siteReferer(url) {
   catch { return ""; }
 }
 
+/**
+ * Build a custom hls.js loader that routes all segment/manifest requests
+ * through /api/proxy so CORS is handled server-side.
+ */
 function buildProxyLoader(Hls, streamReferer) {
   const DefaultLoader = Hls.DefaultConfig.loader;
   return class ProxyLoader {
-    constructor(config) { this._delegate = new DefaultLoader(config); }
-    get stats() { return this._delegate.stats; }
-    set stats(v) { this._delegate.stats = v; }
+    constructor(config) { this._loader = new DefaultLoader(config); }
+    get stats()   { return this._loader.stats; }
+    get context() { return this._loader.context; }
+    destroy()     { this._loader.destroy(); }
+    abort()       { this._loader.abort(); }
+
     load(context, config, callbacks) {
-      if (context.url) {
-        const already = unwrapProxied(context.url);
-        context.url = already ?? proxyUrl(context.url, streamReferer);
+      const original = context.url;
+      if (!original.startsWith("/api/proxy")) {
+        context.url = proxyUrl(original, streamReferer);
       }
-      this._delegate.load(context, config, callbacks);
+      this._loader.load(context, config, callbacks);
     }
-    abort()   { this._delegate.abort?.(); }
-    destroy() { this._delegate.destroy?.(); }
   };
+}
+
+// ── Subtitle helpers ──────────────────────────────────────────────────────────
+
+/**
+ * FIX: Text track parse errors for .ass/.ssa subtitles
+ * ───────────────────────────────────────────────────────
+ * Video.js (and the native <track> element) can only parse WebVTT and SRT.
+ * ASS/SSA is an entirely different format — when Video.js or the browser
+ * tries to parse it as WebVTT it spams "Text Track parsing errors" to the
+ * console and no subtitles appear.
+ *
+ * Fix: split subtitle tracks by format. Only .vtt and .srt files are
+ * passed to native <track> elements. .ass/.ssa files are noted but skipped
+ * (full ASS rendering requires a dedicated library like JavascriptSubtitlesOctopus
+ * which is out of scope here).
+ */
+function classifySubtitles(subtitles) {
+  const supported = [];
+  const assOnly   = [];
+
+  for (const sub of subtitles) {
+    const url = (sub.url || "").toLowerCase();
+    if (url.includes(".ass") || url.includes(".ssa")) {
+      assOnly.push(sub);
+    } else {
+      // .vtt and .srt are both handled by the browser's <track> element
+      supported.push(sub);
+    }
+  }
+
+  return { supported, assOnly };
 }
 
 // ── AniSkip ───────────────────────────────────────────────────────────────────
 
+/**
+ * FIX (AniSkip 400): Direct browser fetch to api.aniskip.com fails with
+ * a CORS rejection (no Access-Control-Allow-Origin header). Route through
+ * /api/proxy instead — server-side, no CORS restrictions apply.
+ */
 async function fetchAniSkip(malId, episode) {
   if (!malId || !episode) return null;
   try {
-    const res = await fetch(
-      `https://api.aniskip.com/v2/skip-times/${malId}/${episode}?types[]=op&types[]=ed&episodeLength=0`
-    );
+    const aniskipUrl =
+      `https://api.aniskip.com/v2/skip-times/${malId}/${episode}` +
+      `?types[]=op&types[]=ed&episodeLength=0`;
+    const res = await fetch(`/api/proxy?url=${encodeURIComponent(aniskipUrl)}`);
     if (!res.ok) return null;
     const data = await res.json();
     if (!data.found) return null;
@@ -91,12 +143,12 @@ const IconPrev = () => (
 );
 const IconNext = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M16 6h2v12h-2zm-3.5 6L4 6v12z"/>
+    <path d="M6 18l8.5-6L6 6v12zm8.5-6v6h2V6h-2v6z"/>
   </svg>
 );
 const IconSkip = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M6 18l8.5-6L6 6v12zm8.5-6v6h2V6h-2v6z"/>
   </svg>
 );
 
@@ -104,28 +156,29 @@ const IconSkip = () => (
 
 export default function HlsPlayer({
   src,
-  subtitles     = [],
-  headers       = {},
-  poster        = "",
-  onPrev        = null,
-  onNext        = null,
-  hasPrev       = false,
-  hasNext       = false,
-  malId         = null,
-  epNumber      = null,
-  autoplay      = true,
-  autoNext      = true,
+  subtitles        = [],
+  headers          = {},
+  poster           = "",
+  onPrev           = null,
+  onNext           = null,
+  hasPrev          = false,
+  hasNext          = false,
+  malId            = null,
+  epNumber         = null,
+  autoplay         = true,
+  autoNext         = true,
   onAutoplayChange = null,
   onAutoNextChange = null,
 }) {
   const videoRef = useRef(null);
   const hlsRef   = useRef(null);
 
-  const [error,   setError]   = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [quality, setQuality] = useState([]);
-  const [selQ,    setSelQ]    = useState(-1);
+  const [error,     setError]     = useState(null);
+  const [loading,   setLoading]   = useState(true);
+  const [quality,   setQuality]   = useState([]);
+  const [selQ,      setSelQ]      = useState(-1);
   const [activeSub, setActiveSub] = useState(0);
+  const [codecInfo, setCodecInfo] = useState(""); // shown when HEVC fallback activates
 
   const [skipTimes,  setSkipTimes]  = useState(null);
   const [skipBanner, setSkipBanner] = useState(null); // "op"|"ed"|null
@@ -140,7 +193,7 @@ export default function HlsPlayer({
     if (malId && epNumber) fetchAniSkip(malId, epNumber).then(d => d && setSkipTimes(d));
   }, [malId, epNumber]);
 
-  // Track time → show skip banner
+  // Track playback time → show skip banner
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -156,7 +209,7 @@ export default function HlsPlayer({
     return () => video.removeEventListener("timeupdate", fn);
   }, [skipTimes]);
 
-  // Auto-next on ended
+  // Auto-next countdown on video end
   const cancelCountdown = useCallback(() => {
     clearInterval(countdownRef.current);
     countdownRef.current = null;
@@ -165,27 +218,39 @@ export default function HlsPlayer({
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
-    const onEnded = () => {
-      if (!autoNext || !hasNext) return;
-      let s = 5; setCountdown(s);
+    if (!video || !autoNext || !hasNext) return;
+    const fn = () => {
+      let n = 5;
+      setCountdown(n);
       countdownRef.current = setInterval(() => {
-        s -= 1; setCountdown(s);
-        if (s <= 0) { cancelCountdown(); onNext?.(); }
+        n -= 1;
+        if (n <= 0) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+          setCountdown(null);
+          onNext?.();
+        } else setCountdown(n);
       }, 1000);
     };
-    video.addEventListener("ended", onEnded);
-    return () => { video.removeEventListener("ended", onEnded); cancelCountdown(); };
+    video.addEventListener("ended", fn);
+    return () => { video.removeEventListener("ended", fn); cancelCountdown(); };
   }, [autoNext, hasNext, onNext, cancelCountdown]);
 
-  // HLS setup
+  // ── hls.js setup ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!src) return;
-    setError(null); setLoading(true); setQuality([]); setSelQ(-1);
-    cancelCountdown(); setSkipBanner(null);
+    setError(null);
+    setLoading(true);
+    setQuality([]);
+    setSelQ(-1);
+    setCodecInfo("");
+    cancelCountdown();
+    setSkipBanner(null);
 
     const video = videoRef.current;
     if (!video) return;
+
+    // Destroy any existing hls.js instance before creating a new one
     if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
 
     const isHLS   = src.includes(".m3u8");
@@ -194,10 +259,19 @@ export default function HlsPlayer({
 
     if (isHLS) {
       import("hls.js").then(({ default: Hls }) => {
+        // Guard: component may have unmounted while the import was in flight
+        if (!videoRef.current) return;
+
         if (!Hls.isSupported()) {
+          // Safari has native HLS support — fall through to video.src below
           if (video.canPlayType("application/vnd.apple.mpegurl")) {
-            video.src = proxied; video.load(); setLoading(false);
-          } else { setError("HLS not supported in this browser."); }
+            video.src = proxied;
+            video.load();
+            setLoading(false);
+            if (autoplay) video.play().catch(() => {});
+          } else {
+            setError("HLS not supported in this browser.");
+          }
           return;
         }
 
@@ -206,9 +280,8 @@ export default function HlsPlayer({
         catch { ProxyLoader = undefined; }
 
         const hls = new Hls({
-          xhrSetup: () => {},
-          enableWorker: true,
-          lowLatencyMode: false,
+          enableWorker:            true,
+          lowLatencyMode:          false,
           fragLoadingMaxRetry:     4,
           keyLoadingMaxRetry:      4,
           manifestLoadingMaxRetry: 2,
@@ -232,34 +305,47 @@ export default function HlsPlayer({
         hls.on(Hls.Events.ERROR, (_, data) => {
           if (!data.fatal) return;
 
-          // AnimePahe: HEVC/H.265 codec not supported in most browsers
+          // ── HEVC/H.265 codec not supported in this browser ───────────────
+          // Strategy: find any quality level using a DIFFERENT codec and switch
+          // to it. Covers the AnimePahe case where some levels are HEVC and
+          // others are H.264 — we just jump to an H.264 level automatically.
           if (data.details === "bufferAddCodecError") {
-            const cur    = hls.currentLevel;
-            const levels = hls.levels || [];
-            const next   = levels.findIndex((l, i) =>
-              i !== cur && (l.videoCodec || "") !== (levels[cur]?.videoCodec || "")
+            const cur      = hls.currentLevel;
+            const levels   = hls.levels || [];
+            const curCodec = levels[cur]?.videoCodec || "";
+
+            const fallback = levels.findIndex((l, i) =>
+              i !== cur && (l.videoCodec || "") !== curCodec && l.videoCodec
             );
-            if (next >= 0) { hls.currentLevel = next; return; } // non-fatal recovery
+
+            if (fallback >= 0) {
+              const fb = levels[fallback].videoCodec;
+              console.info(`[hls] HEVC unsupported → switching to level ${fallback} (${fb})`);
+              hls.currentLevel = fallback;
+              setCodecInfo(`Codec fallback: ${fb}`);
+              return; // non-fatal — recovery complete
+            }
+
             setError("Unsupported video codec (HEVC/H.265). Try a different source.");
             setLoading(false);
             return;
           }
 
-          // AnimeNexus in1.cdn.nexus: IP-pinned audio tracks 403 → non-fatal, video continues
+          // AnimeNexus in1.cdn.nexus: IP-pinned audio tracks 403 — video still works
           if (data.details === "audioTrackLoadError") {
             console.warn("[hls] audio track load failed (IP-pinned CDN) — video-only mode");
             setLoading(false);
             return;
           }
 
-          // AnimeKai/MegaUp: IP-pinned m3u8 manifest 403
+          // AnimeKai/MegaUp: IP-pinned manifest 403
           if (data.details === "manifestLoadError") {
             setError("Stream unavailable (geo/IP restriction). Try another source.");
             setLoading(false);
             return;
           }
 
-          // Bad manifest content (HTML 403 error page returned instead of m3u8)
+          // HTML error page returned instead of m3u8 (source blocked)
           if (data.details === "manifestParsingError") {
             setError("Stream failed to load. The source may be restricted. Try another source.");
             setLoading(false);
@@ -275,16 +361,22 @@ export default function HlsPlayer({
         console.error("[hls] import failed:", e);
         setError("Could not load HLS player.");
       });
+
     } else {
-      video.src = proxied; video.load(); setLoading(false);
+      // Non-HLS (mp4, etc.) — plain video src
+      video.src = proxied;
+      video.load();
+      setLoading(false);
       if (autoplay) video.play().catch(() => {});
     }
 
-    return () => { if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; } };
+    return () => {
+      if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src, headers]);
 
-  // Subtitle switching
+  // Subtitle track switching via native TextTrack API
   function switchSub(idx) {
     const video = videoRef.current;
     if (!video) return;
@@ -311,8 +403,12 @@ export default function HlsPlayer({
     hideTimer.current = setTimeout(() => setShowBar(false), 3500);
   }
 
-  const referer     = headers?.Referer || headers?.referer || siteReferer(src);
-  const proxiedSubs = subtitles.map(s => ({ ...s, url: proxyUrl(s.url, referer) }));
+  const referer = headers?.Referer || headers?.referer || siteReferer(src);
+
+  // Split subtitles: only pass .vtt / .srt to <track>; ignore .ass / .ssa
+  // (ASS requires a dedicated renderer — native <track> cannot parse them)
+  const { supported: supportedSubs, assOnly } = classifySubtitles(subtitles);
+  const proxiedSubs = supportedSubs.map(s => ({ ...s, url: proxyUrl(s.url, referer) }));
 
   if (!src) return (
     <div className={styles.wrapper}>
@@ -331,7 +427,7 @@ export default function HlsPlayer({
         <div className={styles.errorOv}><span>⚠️</span><p>{error}</p></div>
       )}
 
-      {/* Auto-next countdown */}
+      {/* Auto-next countdown overlay */}
       {countdown !== null && (
         <div className={styles.countdownOv}>
           <div className={styles.countdownCard}>
@@ -360,6 +456,11 @@ export default function HlsPlayer({
         </div>
       )}
 
+      {/*
+        Plain <video> element — hls.js attaches to this ref.
+        Only .vtt / .srt subtitle tracks are passed here; .ass files are
+        excluded because the browser cannot parse them as WebVTT.
+      */}
       <video
         ref={videoRef}
         className={styles.video}
@@ -369,8 +470,14 @@ export default function HlsPlayer({
         playsInline
       >
         {proxiedSubs.map((s, i) => (
-          <track key={i} kind="subtitles" src={s.url} label={s.label}
-            srcLang={s.label?.toLowerCase().slice(0, 2) || "en"} default={i === 0} />
+          <track
+            key={i}
+            kind="subtitles"
+            src={s.url}
+            label={s.label}
+            srcLang={s.label?.toLowerCase().slice(0, 2) || "en"}
+            default={i === 0}
+          />
         ))}
       </video>
 
@@ -405,14 +512,28 @@ export default function HlsPlayer({
           </button>
         </div>
 
-        {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Quality */}
+        {/* HEVC codec fallback badge — visible only when fallback is active */}
+        {codecInfo && (
+          <div className={styles.codecBadge} title="HEVC unsupported; switched to H.264 track">
+            {codecInfo}
+          </div>
+        )}
+
+        {/* ASS subtitle notice — shown when only .ass tracks are available */}
+        {proxiedSubs.length === 0 && assOnly.length > 0 && (
+          <div className={styles.codecBadge} title="ASS subtitles are not supported by the browser">
+            Subs: ASS only (unsupported)
+          </div>
+        )}
+
+        {/* Quality selector */}
         {quality.length > 1 && (
           <div className={styles.qualityBar}>
             <span className={styles.qualityLabel}>Quality</span>
-            <button className={`${styles.qualBtn} ${selQ === -1 ? styles.qualActive : ""}`}
+            <button
+              className={`${styles.qualBtn} ${selQ === -1 ? styles.qualActive : ""}`}
               onClick={() => switchQuality(-1)}>Auto</button>
             {quality.map(q => (
               <button key={q.index}
@@ -422,19 +543,18 @@ export default function HlsPlayer({
           </div>
         )}
 
-        {/* Subtitles */}
+        {/* Subtitle track selector (only for supported formats) */}
         {proxiedSubs.length > 1 && (
-          <div className={styles.qualityBar}>
+          <div className={styles.subBar}>
             <span className={styles.qualityLabel}>Sub</span>
-            <button className={`${styles.qualBtn} ${activeSub === -1 ? styles.qualActive : ""}`}
-              onClick={() => switchSub(-1)}>Off</button>
             {proxiedSubs.map((s, i) => (
               <button key={i}
                 className={`${styles.qualBtn} ${activeSub === i ? styles.qualActive : ""}`}
-                onClick={() => switchSub(i)}>{s.label}</button>
+                onClick={() => switchSub(i)}>{s.label || `Track ${i + 1}`}</button>
             ))}
           </div>
         )}
+
       </div>
     </div>
   );
