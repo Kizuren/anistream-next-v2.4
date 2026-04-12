@@ -1,13 +1,12 @@
 import AnimeDetailClient from "@/components/AnimeDetailClient";
 
-// Force dynamic rendering — prevents webpack static analysis errors
-// when client components reference server-only modules
 export const dynamic = "force-dynamic";
+export const viewport  = { themeColor: "#07060b" };
 
 export function generateMetadata({ params }) {
-  return { title: `Anime — Animedex` };
+  return { title: `Anime — AnimeDex` };
 }
 
 export default function AnimeDetailPage({ params }) {
-  return <AnimeDetailClient id={params.id} />;
+  return <AnimeDetailClient animeId={params.id} />;
 }

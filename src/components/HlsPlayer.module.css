@@ -1,30 +1,68 @@
-/* ═══════════════════════════════════════════════════════════
-   HlsPlayer — full-featured anime player styles
-   ═══════════════════════════════════════════════════════════ */
+/* HlsPlayer.module.css — Custom controls, dark anime-streaming theme */
 
+/* ── Wrapper ─────────────────────────────────────────────────────────────────*/
 .wrapper {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #000;
-  border-radius: var(--r-lg, 12px);
+  border-radius: 8px;
   overflow: hidden;
   user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+.wrapper.fullscreen {
+  border-radius: 0;
+  aspect-ratio: unset;
+  height: 100vh;
+}
+
+.hideCursor { cursor: none; }
+
+/* ── Video ───────────────────────────────────────────────────────────────────*/
 .video {
-  position: absolute;
-  inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: contain;
   display: block;
 }
 
-/* ── Overlays ─────────────────────────────────────────────── */
+/* ── HEVC Warning Banner ─────────────────────────────────────────────────────*/
+.hevcWarning {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(255, 140, 0, 0.92);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  animation: slideDown 0.25s ease;
+}
+@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+.hevcWarning svg { flex-shrink: 0; opacity: 0.9; }
+.hevcWarning span { flex: 1; }
+.hevcWarning button {
+  background: rgba(255,255,255,0.25);
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  flex-shrink: 0;
+}
 
-.loadOv,
-.errorOv,
-.empty {
+/* ── Overlays ────────────────────────────────────────────────────────────────*/
+.loadOv, .errorOv, .empty {
   position: absolute;
   inset: 0;
   display: flex;
@@ -32,247 +70,451 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: var(--bg-card, #13141a);
-  text-align: center;
-  padding: 24px;
+  background: rgba(0,0,0,.7);
+  color: #fff;
+  font-size: 14px;
   z-index: 10;
 }
-.loadOv p,
-.errorOv p,
-.empty p { font-size: 13px; color: var(--text-2, #888); }
-.empty span,
-.errorOv span { font-size: 40px; }
 
-/* ── Auto-next countdown ─────────────────────────────────── */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.errorOv { background: rgba(20,0,0,.85); }
+.errorOv span { font-size: 32px; }
+.errorOv p { text-align: center; max-width: 320px; color: #ff8888; }
+
+.empty span { font-size: 40px; }
+.empty p { color: #888; }
+
+/* ── Skip + countdown overlays ───────────────────────────────────────────────*/
+.skipBanner {
+  position: absolute;
+  bottom: 90px;
+  right: 20px;
+  z-index: 20;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.skipBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: rgba(255,255,255,.15);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255,255,255,.4);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+  letter-spacing: 0.02em;
+}
+.skipBtn:hover { background: rgba(255,255,255,.28); transform: scale(1.03); }
 
 .countdownOv {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-end;
-  padding: 24px;
-  z-index: 20;
+  padding: 0 40px;
+  background: rgba(0,0,0,.5);
+  z-index: 25;
+}
+.countdownCard {
+  text-align: center;
+  background: rgba(10,10,10,.85);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 14px;
+  padding: 24px 32px;
+  color: #fff;
+  backdrop-filter: blur(12px);
+}
+.countdownLabel { font-size: 13px; color: #aaa; margin: 0 0 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+.countdownNum   { font-size: 56px; font-weight: 700; line-height: 1; margin: 0 0 16px; color: #ff4b4b; }
+.countdownBtns  { display: flex; gap: 10px; justify-content: center; }
+.cdPlay   { padding: 8px 20px; background: #ff4b4b; color: #fff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; transition: background .15s; }
+.cdPlay:hover { background: #ff3333; }
+.cdCancel { padding: 8px 20px; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); border-radius: 6px; cursor: pointer; font-size: 13px; transition: background .15s; }
+.cdCancel:hover { background: rgba(255,255,255,.18); }
+
+/* ── Codec badge ─────────────────────────────────────────────────────────────*/
+.codecBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(0,0,0,.7);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: #ffd700;
+  z-index: 15;
   pointer-events: none;
 }
 
-.countdownCard {
-  background: rgba(10, 11, 15, 0.92);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 20px 28px;
-  text-align: center;
-  pointer-events: all;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  min-width: 180px;
-}
-.countdownLabel {
-  font-size: 12px;
-  color: var(--text-2, #888);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  margin-bottom: 8px;
-}
-.countdownNum {
-  font-size: 48px;
-  font-weight: 800;
-  color: var(--accent, #6c63ff);
-  line-height: 1;
-  margin-bottom: 16px;
-  font-variant-numeric: tabular-nums;
-}
-.countdownBtns {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-.cdPlay {
-  padding: 7px 16px;
-  border-radius: 99px;
-  background: var(--accent, #6c63ff);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-.cdPlay:hover { opacity: 0.85; }
-.cdCancel {
-  padding: 7px 16px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-2, #888);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.cdCancel:hover { background: rgba(255, 255, 255, 0.14); }
-
-/* ── AniSkip banner ───────────────────────────────────────── */
-
-.skipBanner {
+/* ── Controls overlay ────────────────────────────────────────────────────────*/
+.controls {
   position: absolute;
-  bottom: 72px;
-  right: 20px;
-  z-index: 25;
-  animation: fadeSlideUp 0.25s ease;
-}
-
-@keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.skipBtn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 20px;
-  border-radius: 99px;
-  background: rgba(10, 11, 15, 0.88);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-.skipBtn:hover {
-  background: var(--accent, #6c63ff);
-  border-color: var(--accent, #6c63ff);
-}
-
-/* ── Top control bar ──────────────────────────────────────── */
-
-.topBar {
-  position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
+  padding: 60px 0 0;
+  background: linear-gradient(to top, rgba(0,0,0,.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+  z-index: 20;
+  opacity: 0;
+  transition: opacity .25s ease;
+  pointer-events: none;
+}
+.controlsVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Progress bar ────────────────────────────────────────────────────────────*/
+.progressWrap {
+  position: relative;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.progressWrap:hover .progressThumb { transform: translate(-50%, -50%) scale(1.35); }
+.progressWrap:hover .progressBg    { height: 6px; }
+
+.progressBg {
+  position: relative;
+  height: 4px;
+  background: rgba(255,255,255,.2);
+  border-radius: 2px;
+  transition: height .15s ease;
+}
+
+.progressBuffered {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  background: rgba(255,255,255,.3);
+  border-radius: 2px;
+  transition: width .3s linear;
+}
+.progressFill {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  background: #ff4b4b;
+  border-radius: 2px;
+  transition: width .1s linear;
+}
+.progressThumb {
+  position: absolute;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  background: #ff4b4b;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform .15s;
+  box-shadow: 0 0 5px rgba(255,75,75,.6);
+}
+
+/* Seek preview tooltip */
+.seekTooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.85);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+}
+
+/* ── Bottom row ──────────────────────────────────────────────────────────────*/
+.bottomRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 100%);
-  z-index: 15;
-  opacity: 0;
-  transition: opacity 0.25s;
-  flex-wrap: wrap;
-}
-.topBar.barVisible { opacity: 1; }
-.wrapper:hover .topBar { opacity: 1; }
-
-/* Prev/Next nav */
-.epNav {
-  display: flex;
+  justify-content: space-between;
+  padding: 4px 10px 12px;
   gap: 4px;
 }
-.navBtn {
+
+.leftCluster, .rightCluster {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.rightCluster { gap: 4px; }
+
+/* ── Control buttons ─────────────────────────────────────────────────────────*/
+.ctrlBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
   color: #fff;
   cursor: pointer;
-  transition: background 0.15s;
+  border-radius: 6px;
+  transition: background .12s, opacity .12s;
   flex-shrink: 0;
 }
-.navBtn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
-.navBtn:disabled { opacity: 0.3; cursor: not-allowed; }
+.ctrlBtn:hover { background: rgba(255,255,255,.15); }
+.ctrlBtn:disabled { opacity: .3; cursor: not-allowed; }
+.ctrlBtn:disabled:hover { background: none; }
+.ctrlBtnActive { color: #ff4b4b; }
 
-/* Autoplay / Auto-next toggles */
-.toggleRow {
-  display: flex;
-  gap: 6px;
-}
-.toggle {
+/* ── Volume ──────────────────────────────────────────────────────────────────*/
+.volGroup {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 11.5px;
-  font-weight: 600;
+  gap: 2px;
+}
+.volSlider {
+  width: 0;
+  max-width: 0;
+  opacity: 0;
+  transition: width .2s, opacity .2s, max-width .2s;
+  height: 3px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  accent-color: #ff4b4b;
+}
+.volGroup:hover .volSlider,
+.volGroup:focus-within .volSlider {
+  width: 70px;
+  max-width: 70px;
+  opacity: 1;
+}
+
+/* ── Time display ────────────────────────────────────────────────────────────*/
+.timeDisplay {
+  font-size: 12px;
+  color: rgba(255,255,255,.85);
   white-space: nowrap;
-}
-.toggle:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
-.toggleOn {
-  background: rgba(108, 99, 255, 0.25);
-  color: var(--accent, #6c63ff);
-  border: 1px solid rgba(108, 99, 255, 0.4);
-}
-.toggleDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  padding: 0 6px;
 }
 
-/* Quality / subtitle pill bars */
-.qualityBar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-  border-radius: 99px;
+/* ── Text toggles (Autoplay / Auto-next) ─────────────────────────────────────*/
+.textBtn {
   padding: 4px 8px;
-  flex-wrap: wrap;
-}
-.qualityLabel {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-right: 2px;
-}
-.qualBtn {
-  padding: 3px 9px;
-  border-radius: 99px;
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.65);
-  transition: color 0.15s, background 0.15s;
-  cursor: pointer;
-}
-.qualBtn:hover  { color: #fff; }
-.qualActive     { background: var(--accent, #6c63ff); color: #fff !important; }
-
-
-/* subBar: subtitle track selector — same visual style as qualityBar */
-.subBar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-  border-radius: 99px;
-  padding: 4px 8px;
-  flex-wrap: wrap;
-}
-
-/* ── Codec badge — shown when HEVC fallback activates or ASS-only subs detected ── */
-.codecBadge {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 2px 7px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
   border-radius: 4px;
-  background: rgba(99, 102, 241, 0.25);
-  color: #a5b4fc;
-  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: rgba(255,255,255,.55);
+  font-size: 11px;
+  cursor: pointer;
   white-space: nowrap;
+  transition: all .12s;
+}
+.textBtn:hover  { background: rgba(255,255,255,.18); color: #fff; }
+.textBtnOn { background: rgba(255,75,75,.18); border-color: rgba(255,75,75,.45); color: #ff8888; }
+
+/* ── Settings panel ──────────────────────────────────────────────────────────*/
+.settingsWrap {
+  position: relative;
+}
+.settingsPanel {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  background: rgba(12,12,12,.97);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  padding: 14px;
+  min-width: 290px;
+  max-width: 360px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6);
+}
+.settingsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.settingsLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: rgba(255,255,255,.38);
+  font-weight: 700;
+}
+.settingsLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.subStyleToggle {
+  background: none;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 4px;
+  color: rgba(255,255,255,.55);
+  font-size: 10px;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all .12s;
+  letter-spacing: 0.03em;
+}
+.subStyleToggle:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+.settingsBtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.sBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 5px;
+  color: rgba(255,255,255,.8);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .12s;
+  white-space: nowrap;
+}
+.sBtn:hover  { background: rgba(255,255,255,.15); color: #fff; }
+.sBtnActive  { background: rgba(255,75,75,.22); border-color: rgba(255,75,75,.45); color: #ff8888; }
+
+/* ── Codec badges in quality list ────────────────────────────────────────────*/
+.hevcBadge, .h264Badge, .enBadge {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.hevcBadge {
+  background: rgba(255,180,0,.2);
+  border: 1px solid rgba(255,180,0,.4);
+  color: #ffd060;
+}
+.h264Badge {
+  background: rgba(100,200,255,.15);
+  border: 1px solid rgba(100,200,255,.3);
+  color: #80dfff;
+}
+.enBadge {
+  background: rgba(100,255,100,.12);
+  border: 1px solid rgba(100,255,100,.3);
+  color: #80e880;
+}
+
+/* ── Netflix-style subtitle style panel ──────────────────────────────────────*/
+.subStylePanel {
+  margin-top: 6px;
+  padding: 10px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.subStyleRow {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.subStyleRow label {
+  font-size: 10px;
+  color: rgba(255,255,255,.35);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 600;
+}
+.subStyleBtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+/* Color swatches */
+.colorSwatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform .12s, border-color .12s;
+  padding: 0;
+}
+.colorSwatch:hover { transform: scale(1.2); }
+.colorSwatchActive { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 5px rgba(255,255,255,.4); }
+
+/* ── Keyboard shortcut hint ──────────────────────────────────────────────────*/
+.kbHint {
+  font-size: 10px;
+  color: rgba(255,255,255,.28);
+  line-height: 1.7;
+  border-top: 1px solid rgba(255,255,255,.07);
+  padding-top: 8px;
+}
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────────*/
+@media (max-width: 600px) {
+  .settingsPanel {
+    right: -10px;
+    min-width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    border-radius: 12px 12px 0 0;
+    bottom: calc(100% + 6px);
+  }
+
+  .timeDisplay {
+    display: none; /* hide on very small screens to save space */
+  }
+
+  .textBtn {
+    display: none; /* hide autoplay/auto-next text buttons on mobile */
+  }
+
+  .volSlider {
+    display: none; /* volume via gestures on mobile */
+  }
+
+  .skipBanner {
+    bottom: 80px;
+    right: 12px;
+  }
+
+  .skipBtn {
+    font-size: 12px;
+    padding: 7px 14px;
+  }
+
+  .countdownOv {
+    justify-content: center;
+    padding: 0;
+  }
+}
+
+@media (max-width: 400px) {
+  .ctrlBtn {
+    width: 30px;
+    height: 30px;
+  }
 }

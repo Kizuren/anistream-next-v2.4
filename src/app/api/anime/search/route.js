@@ -37,7 +37,9 @@ export async function GET(request) {
       }
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: { "Cache-Control": "s-maxage=600, stale-while-revalidate=1200" },
+    });
   } catch (err) {
     console.error("[search]", err.message);
     return NextResponse.json({ error: err.message }, { status: 502 });

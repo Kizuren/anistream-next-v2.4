@@ -29,19 +29,9 @@ const nextConfig = {
     ].join(" ");
 
     // PROBLEM 1 FIX — CSP connect-src:
-    // hls.js fetches .key (AES-128 encryption keys) and EXT-X-MAP URIs
-    // directly via XHR before the proxy can intercept them. Even though the
-    // m3u8 manifest has its URLs rewritten to /api/proxy, hls.js resolves
-    // the #EXT-X-KEY URI from the already-fetched (proxied) text and issues a
-    // new XHR — which the browser blocks because the target host isn't in CSP.
-    //
-    // The correct fix is NOT to whitelist every CDN (impossible, infinite list).
-    // Instead we intercept .key fetches in the HLS loader (see HlsPlayer.jsx fix).
-    // But as a belt-and-suspenders measure, 'self' covers /api/proxy which is the
-    // only endpoint hls.js should be hitting after the manifest rewrite fix.
-    //
-    // The remaining connect-src entries are for direct API calls that legitimately
-    // happen in the browser (AniList, TMDB, auth).
+    // NEXT_PUBLIC_PROXY_URL is the Cloudflare Worker URL.
+    // Add it to connect-src so hls.js can reach it for manifest fetches.
+    const cfProxyUrl = process.env.NEXT_PUBLIC_PROXY_URL || "";
     const connectSrc = [
       "'self'",
       "https://graphql.anilist.co",
@@ -56,6 +46,11 @@ const nextConfig = {
       "https://*.firebase.com",
       "https://theanimecommunity.com",
       "https://*.theanimecommunity.com",
+      "https://api.aniskip.com",
+      // Cloudflare Worker proxy — added dynamically so CSP is always correct
+      ...(cfProxyUrl ? [cfProxyUrl] : []),
+      // Allow direct CDN fetches for HLS segments (hls.js fetches .ts directly)
+      "https://*",
     ].join(" ");
 
     // media-src must include blob: for hls.js MSE playback

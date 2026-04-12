@@ -1,61 +1,76 @@
-.section { margin-bottom: 40px; }
+.section { margin-bottom: 52px; }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
-.viewAll {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--accent);
-  transition: opacity var(--t-fast), gap var(--t-fast);
-  white-space: nowrap;
-}
-.viewAll:hover { opacity: 0.75; gap: 7px; }
-
-/* ── Responsive grid — wraps into multiple rows ────────── */
-.row {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-  gap: 14px;
-}
-
-/* Skeleton cards match real card dimensions */
-.skelCard { width: 100%; }
-.skelPoster { width: 100%; aspect-ratio: 2/3; border-radius: var(--r-lg); }
-.skelLine   { height: 10px; border-radius: 3px; }
-
-.empty {
+.titleWrap {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 0;
-  font-size: 13px;
-  color: var(--text-3);
 }
-.emptyLink {
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 500;
-  transition: opacity var(--t-fast);
-}
-.emptyLink:hover { opacity: 0.75; }
 
-/* ── Responsive breakpoints ────────────────────────────── */
-@media (max-width: 1024px) {
-  .row { grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); }
+.titleAccent {
+  width: 3px;
+  height: 20px;
+  background: linear-gradient(to bottom, var(--accent), var(--purple));
+  border-radius: 99px;
+  box-shadow: 0 0 8px var(--accent-glow);
+  flex-shrink: 0;
 }
+
+.title {
+  font-size: 14px;
+  letter-spacing: 0.12em;
+}
+
+.viewAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.05em;
+  transition: color var(--t-fast);
+}
+.viewAll:hover { color: var(--accent); }
+
+/* ── Grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+/* ── Skeleton ── */
+.skeletonCard {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+.skeletonPoster {
+  aspect-ratio: 2/3;
+  width: 100%;
+}
+
+.skeletonInfo {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeletonTitle { height: 12px; width: 80%; border-radius: 99px; }
+.skeletonMeta  { height: 10px; width: 50%; border-radius: 99px; }
 
 @media (max-width: 640px) {
-  .row { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-}
-
-@media (max-width: 400px) {
-  .row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
 }

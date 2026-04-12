@@ -55,8 +55,27 @@ export const api = {
   home:      ()               => apiFetch("/anime/home"),
   search:    (q, page = 1)   => apiFetch("/anime/search", { q, page }),
   category:  (cat, page = 1) => apiFetch(`/anime/category/${cat}`, { page }),
-  info:      (slug)           => apiFetch(`/anime/info/${slug}`),
-  episodes:  (slug)           => apiFetch(`/anime/episodes/${slug}`),
+  /**
+   * Guard against undefined/null slugs — these cause 404s like
+   * GET /api/anime/info/undefined which spam logs and waste quota.
+   * Root cause: AnimeDetailClient received wrong prop name (id vs animeId).
+   * This guard is a safety net so a bad prop never hits the network.
+   */
+  info: (slug) => {
+    if (!slug || slug === "undefined" || slug === "null") {
+      console.warn("[api.info] called with invalid slug:", slug);
+      return Promise.resolve(null);
+    }
+    return apiFetch(`/anime/info/${slug}`);
+  },
+
+  episodes: (slug) => {
+    if (!slug || slug === "undefined" || slug === "null") {
+      console.warn("[api.episodes] called with invalid slug:", slug);
+      return Promise.resolve({ episodes: [], totalEpisodes: 0 });
+    }
+    return apiFetch(`/anime/episodes/${slug}`);
+  },
 
   // ── Crysoline streaming (server-side proxy) ───────────────────────────
   crysoline: {

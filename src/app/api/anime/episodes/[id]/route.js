@@ -1,5 +1,8 @@
 export const maxDuration = 30;
-export const dynamic = "force-dynamic";
+// Cache episodes at Vercel CDN edge — episode lists change rarely.
+// Per-ID caching: CDN stores a separate response for each anime slug.
+export const dynamic = "force-static";
+export const revalidate = 3600; // Re-fetch at most every hour
 
 import { NextResponse } from "next/server";
 import { idFromSlug } from "@/lib/anilist";
@@ -16,7 +19,9 @@ export async function GET(request, { params }) {
 
   // 1. Fresh cache (6 hour TTL)
   const cached = await getCachedAsync(key);
-  if (cached) return NextResponse.json(cached);
+  if (cached) return NextResponse.json(cached, {
+    headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=86400" },
+  });
 
   // 2. Live fetch
   try {
@@ -30,12 +35,13 @@ export async function GET(request, { params }) {
       await setCachedAsync(key,      out, 6 * 60 * 60);
       setCachedAsync(staleKey, out, 24 * 60 * 60).catch(() => {});
     }
-    return NextResponse.json(out);
+    return NextResponse.json(out, {
+      headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=86400" },
+    });
 
   } catch (err) {
     console.error(`[episodes/${id}]`, err.message);
 
-    // 3. Serve stale backup
     const stale = await getCachedAsync(staleKey);
     if (stale) {
       console.warn(`[episodes/${id}] Serving stale backup — ${err.message}`);

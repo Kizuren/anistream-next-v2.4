@@ -1,327 +1,419 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useQuery, prefetch } from "@/hooks/useQuery";
 import { api } from "@/lib/api";
-import styles from "./AnimeDetailClient.module.css";
 import CharacterSection from "./CharacterSection";
-import RelatedSection from "./RelatedSection";
+import AniListPanel from "./AniListPanel";
+import styles from "./AnimeDetailClient.module.css";
 
-export default function AnimeDetailClient({ id }) {
-  const router = useRouter();
-  const [info,        setInfo]  = useState(null);
-  const [eps,         setEps]   = useState(null);
-  const [infoLoading, setIL]    = useState(true);
-  const [epsLoading,  setEL]    = useState(true);
-  const [error,       setError] = useState(null);
-  const [showAllEps,  setSAE]   = useState(false);
-
-  useEffect(() => {
-    setIL(true); setError(null);
-    api.info(id)
-      .then(d  => { setInfo(d); setIL(false); })
-      .catch(e => { setError(e.message); setIL(false); });
-    api.episodes(id)
-      .then(d => { setEps(d); setEL(false); })
-      .catch(() => setEL(false));
-  }, [id]);
-
-  if (infoLoading) return <DetailSkeleton />;
-  if (error) return (
-    <div className={styles.errPage}>
-      <span>⚠</span>
-      <p>{error}</p>
-      <button onClick={() => router.back()}>← Go Back</button>
-    </div>
-  );
-
-  const anime      = info?.anime?.info;
-  const moreInfo   = info?.anime?.moreInfo;
-  const related    = info?.relatedAnimes     || [];
-  const recs       = info?.recommendedAnimes || [];
-  const seasons    = info?.seasons           || [];
-  const characters = info?.characters        || [];
-  const episodes   = eps?.episodes           || [];
-  const displayEps = showAllEps ? episodes : episodes.slice(0, 60);
-
-  if (!anime) return null;
-
-  function watchFirst() {
-    if (!episodes.length) return;
-    router.push(`/watch/${id}/${episodes[0].epSlug}`);
-  }
-
+/* ── Skeletons ─────────────────────────────────────────────────────── */
+function HeroSkeleton() {
   return (
-    <div>
-      {/* ── Hero ─────────────────────────────────────────────── */}
-      <div className={styles.hero}>
-        <div className={styles.heroBg}
-          style={{ backgroundImage: `url(${anime.banner || anime.poster})` }} />
-        <div className={styles.heroGrad} />
-
-        <div className={`container ${styles.heroInner}`}>
-          <div className={styles.posterWrap}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={anime.poster} alt={anime.name} className={styles.poster} />
-            {anime.rating && (
-              <div className={styles.ratingBadge}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-                {anime.rating}
-              </div>
-            )}
+    <div className={styles.heroBanner}>
+      <div className={`container ${styles.heroContent}`}>
+        <div className={`skeleton ${styles.heroPosterSkel}`} />
+        <div className={styles.heroInfo}>
+          <div className="skeleton" style={{ height: 36, width: "55%", borderRadius: 6, marginBottom: 10 }} />
+          <div className="skeleton" style={{ height: 13, width: "35%", borderRadius: 4, marginBottom: 18 }} />
+          <div style={{ display: "flex", gap: 7, marginBottom: 18 }}>
+            {[70, 90, 80].map((w, i) => <div key={i} className="skeleton" style={{ height: 26, width: w, borderRadius: 99 }} />)}
           </div>
-
-          <div className={styles.heroInfo}>
-            {anime.type && <span className={styles.typeChip}>{anime.type}</span>}
-            <h1 className={styles.title}>{anime.name}</h1>
-            {anime.jname && anime.jname !== anime.name && (
-              <p className={styles.jname}>{anime.jname}</p>
-            )}
-
-            <div className={styles.statRow}>
-              {anime.status    && <Chip>{anime.status.replace(/_/g, " ")}</Chip>}
-              {anime.episodes?.sub > 0 && <span className="badge badge-sub">{anime.episodes.sub} Sub</span>}
-              {anime.episodes?.dub > 0 && <span className="badge badge-dub">{anime.episodes.dub} Dub</span>}
-              {anime.duration  && <Chip>⏱ {anime.duration}</Chip>}
-            </div>
-
-            {anime.description && (
-              <p className={styles.desc}
-                dangerouslySetInnerHTML={{
-                  __html: anime.description
-                    .replace(/<br>/gi, " ")
-                    .replace(/<[^>]*>/g, "")
-                    .slice(0, 360) + (anime.description.length > 360 ? "…" : ""),
-                }}
-              />
-            )}
-
-            <div className={styles.metaGrid}>
-              {moreInfo?.aired   && <MetaRow label="Aired"   val={moreInfo.aired} />}
-              {moreInfo?.ended   && moreInfo.ended !== moreInfo.aired && <MetaRow label="Ended"   val={moreInfo.ended} />}
-              {moreInfo?.studios && <MetaRow label="Studio"  val={moreInfo.studios} />}
-              {moreInfo?.season  && <MetaRow label="Season"  val={moreInfo.season} />}
-              {moreInfo?.source  && <MetaRow label="Source"  val={moreInfo.source} />}
-              {moreInfo?.score   && <MetaRow label="Score"   val={moreInfo.score} />}
-              {moreInfo?.rank    && <MetaRow label="Rank"    val={moreInfo.rank} />}
-              {moreInfo?.synonyms?.length > 0 && (
-                <MetaRow label="Also Known As" val={moreInfo.synonyms.join(", ")} />
-              )}
-              {moreInfo?.genres?.length > 0 && (
-                <div className={styles.metaRow}>
-                  <span className={styles.metaLabel}>Genres</span>
-                  <div className={styles.genreRow}>
-                    {moreInfo.genres.map(g => (
-                      <Link key={g}
-                        href={`/browse?category=genre/${g.toLowerCase().replace(/ /g, "-")}`}
-                        className="tag">{g}</Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {moreInfo?.tags?.length > 0 && (
-                <div className={styles.metaRow}>
-                  <span className={styles.metaLabel}>Tags</span>
-                  <div className={styles.genreRow}>
-                    {moreInfo.tags.slice(0, 8).map(t => (
-                      <span key={t.name} className="tag" title={t.rank + "% match"}>{t.name}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className={styles.heroActions}>
-              {!epsLoading && episodes.length > 0 ? (
-                <button className={styles.watchBtn} onClick={watchFirst}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                    <polygon points="5,3 19,12 5,21"/>
-                  </svg>
-                  Watch Now
-                </button>
-              ) : epsLoading ? (
-                <button className={styles.watchBtnGhost} disabled>
-                  <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
-                  Loading…
-                </button>
-              ) : (
-                <button className={styles.watchBtnGhost} disabled>No episodes yet</button>
-              )}
-              <Link
-                href={`/browse?category=genre/${moreInfo?.genres?.[0]?.toLowerCase().replace(/ /g, "-") || "action"}`}
-                className={styles.browseBtn}>
-                Browse Similar
-              </Link>
-              {moreInfo?.trailer?.id && (
-                <a
-                  href={`https://www.youtube.com/watch?v=${moreInfo.trailer.id}`}
-                  target="_blank" rel="noreferrer noopener"
-                  className={styles.trailerBtn}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <polygon points="5,3 19,12 5,21"/>
-                  </svg>
-                  Trailer
-                </a>
-              )}
-            </div>
-            {moreInfo?.externalLinks?.length > 0 && (
-              <div className={styles.externalLinks}>
-                {moreInfo.externalLinks.map(l => (
-                  <a key={l.site} href={l.url} target="_blank" rel="noreferrer noopener"
-                    className={styles.extLink}>
-                    {l.site}
-                  </a>
-                ))}
-              </div>
-            )}
+          <div className="skeleton" style={{ height: 80, borderRadius: 8, marginBottom: 22 }} />
+          <div style={{ display: "flex", gap: 10 }}>
+            <div className="skeleton" style={{ height: 46, width: 148, borderRadius: 12 }} />
+            <div className="skeleton" style={{ height: 46, width: 108, borderRadius: 12 }} />
           </div>
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* ── Body ─────────────────────────────────────────────── */}
-      <div className={`container ${styles.body}`}>
-        <div className={styles.mainGrid}>
+/* ── Compact info item ─────────────────────────────────────────────── */
+function MetaRow({ label, value }) {
+  if (!value) return null;
+  return (
+    <div className={styles.metaRow}>
+      <span className={styles.metaLabel}>{label}</span>
+      <span className={styles.metaValue}>{String(value)}</span>
+    </div>
+  );
+}
 
-          {/* Left / main column */}
-          <div>
-            {/* Seasons */}
-            {seasons.length > 1 && (
-              <section className={styles.section}>
-                <h2 className="section-title" style={{ marginBottom: 14 }}>Seasons</h2>
-                <div className={styles.seasonRow}>
-                  {seasons.map(s => (
-                    <Link key={s.id} href={`/anime/${s.id}`}
-                      className={`${styles.seasonCard} ${s.id === id ? styles.seasonActive : ""}`}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={s.poster} alt={s.name} loading="lazy" />
-                      <span>{s.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
+/* ── Horizontal anime card used in related/recs ───────────────────── */
+function AnimeThumbCard({ anime }) {
+  if (!anime?.id) return null;
+  const { id, name, poster, type, episodes } = anime;
+  return (
+    <Link href={`/anime/${id}`} className={styles.thumbCard}
+      onMouseEnter={() => prefetch(`info:${id}`, () => api.info(id), 300)}>
+      <div className={styles.thumbPoster}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={poster} alt={name} loading="lazy" />
+        <div className={styles.thumbPlay}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        </div>
+      </div>
+      <div className={styles.thumbInfo}>
+        <p className={styles.thumbTitle}>{name}</p>
+        <div className={styles.thumbMeta}>
+          {type && <span className={styles.thumbType}>{type}</span>}
+          {episodes?.sub > 0 && <span className="badge badge-sub">{episodes.sub} eps</span>}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/* ── Section wrapper for related/recs ─────────────────────────────── */
+function AnimeSection({ title, items = [], columns = 2 }) {
+  if (!items.length) return null;
+  return (
+    <section className={styles.animeSection}>
+      <div className={styles.sectionHeaderRow}>
+        <span className={styles.sectionAccent} />
+        <h2 className={`section-title ${styles.sectionTitle}`}>{title}</h2>
+      </div>
+      <div className={styles.thumbGrid} style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+        {items.map(a => <AnimeThumbCard key={a.id} anime={a} />)}
+      </div>
+    </section>
+  );
+}
+
+/* ── Main component ────────────────────────────────────────────────── */
+export default function AnimeDetailClient({ animeId, initialData }) {
+  const [showAllEps, setShowAllEps] = useState(false);
+
+  const { data: info, loading, error } = useQuery(
+    `info:${animeId}`,
+    () => api.info(animeId),
+    { ttl: 300 }
+  );
+  const { data: epsData } = useQuery(
+    `episodes:${animeId}`,
+    () => api.episodes(animeId),
+    { ttl: 180 }
+  );
+
+  const data    = info || initialData;
+  const eps     = epsData?.episodes || [];
+  const anime   = data?.anime?.info;
+  const more    = data?.anime?.moreInfo;
+  const related = data?.relatedAnimes     || [];
+  const recs    = data?.recommendedAnimes || [];
+  const chars   = data?.characters        || [];
+  const seasons = data?.seasons           || [];
+
+  if (error && !data) return (
+    <div className={styles.errPage}>
+      <p className={styles.errMsg}>The spirits have abandoned this realm.</p>
+      <button className={styles.retryBtn} onClick={() => window.location.reload()}>Retry</button>
+    </div>
+  );
+
+  if (!anime) return <HeroSkeleton />;
+
+  const firstEp   = eps[0];
+  const watchUrl  = firstEp ? `/watch/${animeId}/${firstEp.epSlug}` : null;
+  const dispEps   = showAllEps ? eps : eps.slice(0, 100);
+  const cleanDesc = (anime.description || "").replace(/<[^>]*>/g, "").trim();
+
+  return (
+    <div className={styles.page}>
+
+      {/* ── HERO ─────────────────────────────────────────────────── */}
+      <div className={styles.heroBanner}>
+        {(anime.cover || anime.poster) && (
+          <div className={styles.heroBg}
+            style={{ backgroundImage: `url(${anime.cover || anime.poster})` }} />
+        )}
+        <div className={styles.heroGradient} />
+        <div className={styles.heroVignette} />
+
+        <div className={`container ${styles.heroContent}`}>
+          {/* Poster */}
+          <motion.div
+            className={styles.posterWrap}
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={anime.poster} alt={anime.name} className={styles.heroPoster} />
+            <div className={styles.posterGlow} />
+            {watchUrl && (
+              <Link href={watchUrl} className={styles.posterPlayBtn}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5,3 19,12 5,21"/>
+                </svg>
+              </Link>
             )}
+          </motion.div>
+
+          {/* Info column */}
+          <motion.div
+            className={styles.heroInfo}
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {/* Status chips */}
+            <div className={styles.chipRow}>
+              {anime.type && <span className={styles.typeChip}>{anime.type}</span>}
+              {anime.status && (
+                <span className={`${styles.statusChip} ${anime.status === "RELEASING" ? styles.statusLive : ""}`}>
+                  {anime.status === "RELEASING" && <span className={styles.liveDot} />}
+                  {anime.status.replace(/_/g, " ")}
+                </span>
+              )}
+              {more?.score && <span className={styles.scoreChip}>★ {more.score}</span>}
+              {more?.rank  && <span className={styles.rankChip}>{more.rank}</span>}
+            </div>
+
+            <h1 className={styles.heroTitle}>{anime.name}</h1>
+            {anime.jname && anime.jname !== anime.name && (
+              <p className={styles.heroJname}>{anime.jname}</p>
+            )}
+
+            {/* Episode counts */}
+            <div className={styles.epRow}>
+              {anime.episodes?.sub > 0 && (
+                <span className={styles.epBadge}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                  {anime.episodes.sub} Sub
+                </span>
+              )}
+              {anime.episodes?.dub > 0 && (
+                <span className={`${styles.epBadge} ${styles.epBadgeDub}`}>
+                  {anime.episodes.dub} Dub
+                </span>
+              )}
+            </div>
+
+            {cleanDesc && (
+              <p className={styles.heroDesc}>
+                {cleanDesc.slice(0, 300)}{cleanDesc.length > 300 ? "…" : ""}
+              </p>
+            )}
+
+            {/* Genres */}
+            {(more?.genres?.length > 0 || anime.genres?.length > 0) && (
+              <div className={styles.genreRow}>
+                {(more?.genres || anime.genres || []).slice(0, 7).map(g => (
+                  <Link key={g}
+                    href={`/browse?category=genre/${g.toLowerCase().replace(/ /g, "-")}`}
+                    className="tag"
+                  >{g}</Link>
+                ))}
+              </div>
+            )}
+
+            {/* CTAs */}
+            <div className={styles.heroActions}>
+              {watchUrl && (
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                  <Link href={watchUrl} className="btn-primary">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                    Watch Now
+                  </Link>
+                </motion.div>
+              )}
+              {more?.malId && (
+                <a href={`https://myanimelist.net/anime/${more.malId}`}
+                  target="_blank" rel="noreferrer" className="btn-ghost">
+                  MAL ↗
+                </a>
+              )}
+              {/* External streaming links */}
+              {more?.externalLinks?.slice(0, 2).map(l => (
+                <a key={l.site} href={l.url} target="_blank" rel="noreferrer" className="btn-ghost">
+                  {l.site} ↗
+                </a>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ── Seasons strip ─────────────────────────────────────────── */}
+      {seasons.length > 1 && (
+        <div className={`container ${styles.seasonsRow}`}>
+          {seasons.map(s => (
+            <Link key={s.id} href={`/anime/${s.id}`}
+              className={`${styles.seasonBtn} ${s.id === animeId ? styles.seasonActive : ""}`}>
+              {s.name || s.title}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* ── MAIN BODY ─────────────────────────────────────────────── */}
+      <div className={`container ${styles.body}`}>
+        <div className={styles.bodyGrid}>
+
+          {/* ── LEFT: episodes + characters ── */}
+          <div className={styles.mainCol}>
 
             {/* Episodes */}
             <section className={styles.section}>
-              <div className={styles.sectionHead}>
-                <h2 className="section-title">Episodes</h2>
-                <span className={styles.epCount}>{episodes.length} total</span>
+              <div className={styles.sectionHeaderRow}>
+                <span className={styles.sectionAccent} />
+                <h2 className={`section-title ${styles.sectionTitle}`}>
+                  Episodes {eps.length > 0 && <span className={styles.epCount}>{eps.length}</span>}
+                </h2>
               </div>
-
-              {epsLoading ? (
-                <div className={styles.epGrid}>
-                  {Array.from({ length: 24 }).map((_, i) => (
-                    <div key={i} className={`skeleton ${styles.epSkel}`} />
-                  ))}
-                </div>
-              ) : episodes.length === 0 ? (
-                <p className={styles.noEps}>No episodes found via streaming provider.</p>
+              {eps.length === 0 ? (
+                <p className={styles.emptyMsg}>
+                  {loading ? "Loading episodes…" : "No episodes available yet."}
+                </p>
               ) : (
                 <>
                   <div className={styles.epGrid}>
-                    {displayEps.map(ep => (
-                      <Link
+                    {dispEps.map((ep, i) => (
+                      <motion.div
                         key={ep.epSlug}
-                        href={`/watch/${id}/${ep.epSlug}`}
-                        className={styles.epBtn}
-                        title={`Episode ${ep.number}${ep.airDate ? ` · ${ep.airDate}` : ""}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: Math.min(i * 0.005, 0.25) }}
                       >
-                        {ep.number}
-                      </Link>
+                        <Link href={`/watch/${animeId}/${ep.epSlug}`} className={styles.epCard}>
+                          <span className={styles.epNum}>Ep {ep.number}</span>
+                          {ep.title && ep.title !== `Episode ${ep.number}` && (
+                            <span className={styles.epTitle}>{ep.title}</span>
+                          )}
+                          <svg className={styles.epPlay} width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5,3 19,12 5,21"/>
+                          </svg>
+                        </Link>
+                      </motion.div>
                     ))}
                   </div>
-                  {episodes.length > 60 && (
-                    <button className={styles.showMore} onClick={() => setSAE(!showAllEps)}>
-                      {showAllEps ? "Show Less" : `Show All ${episodes.length} Episodes`}
+                  {eps.length > 100 && !showAllEps && (
+                    <button className={styles.showAllBtn} onClick={() => setShowAllEps(true)}>
+                      Show all {eps.length} episodes ↓
                     </button>
                   )}
                 </>
               )}
             </section>
 
-            {/* ── Characters ───────────────────────────────── */}
-            <CharacterSection characters={characters} />
-
-            {/* ── Related Anime (full-width grid below chars) ── */}
-            {related.length > 0 && (
-              <RelatedSection
-                title="Related Anime"
-                items={related.slice(0, 15)}
-                viewAllHref={`/browse?category=top-airing`}
-              />
-            )}
-
-            {/* ── Recommended ──────────────────────────────── */}
-            {recs.length > 0 && (
-              <RelatedSection
-                title="You Might Also Like"
-                items={recs.slice(0, 15)}
-                viewAllHref={`/browse?category=most-popular`}
-              />
-            )}
+            {/* Characters */}
+            {chars.length > 0 && <CharacterSection characters={chars} />}
           </div>
 
-          {/* Sidebar */}
-          <aside>
-            {related.length > 0 && (
-              <section className={styles.sideSection}>
-                <h3 className={styles.sideTitle}>Related</h3>
-                <SideList items={related.slice(0, 8)} />
-              </section>
-            )}
-            {recs.length > 0 && (
-              <section className={styles.sideSection}>
-                <h3 className={styles.sideTitle}>Recommended</h3>
-                <SideList items={recs.slice(0, 8)} />
-              </section>
-            )}
-          </aside>
-        </div>
-      </div>
-    </div>
-  );
-}
+          {/* ── RIGHT: full details panel ── */}
+          <aside className={styles.sideCol}>
 
-/* ── Small helpers ─────────────────────────────────────────── */
-function Chip({ children }) {
-  return <span className={styles.chip}>{children}</span>;
-}
-function MetaRow({ label, val }) {
-  return (
-    <div className={styles.metaRow}>
-      <span className={styles.metaLabel}>{label}</span>
-      <span className={styles.metaVal}>{val}</span>
-    </div>
-  );
-}
-function SideList({ items }) {
-  return (
-    <div className={styles.sideList}>
-      {items.map(a => (
-        <Link key={a.id} href={`/anime/${a.id}`} className={styles.sideCard}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={a.poster} alt={a.name} loading="lazy" className={styles.sideImg} />
-          <div>
-            <p className={styles.sideName}>{a.name}</p>
-            <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
-              {a.episodes?.sub > 0 && (
-                <span className="badge badge-sub">{a.episodes.sub} eps</span>
+            {/* AniList tracking panel */}
+            {anime?.anilistId && (
+              <div style={{ marginBottom: 16 }}>
+                <AniListPanel
+                  anilistId={anime.anilistId}
+                  totalEpisodes={anime.episodes?.sub || null}
+                  compact
+                />
+              </div>
+            )}
+
+            <div className={styles.detailsPanel}>
+              <div className={styles.detailsPanelHeader}>
+                <span className={styles.sectionAccent} />
+                <h3 className={styles.detailsPanelTitle}>Details</h3>
+              </div>
+
+              <div className={styles.metaList}>
+                <MetaRow label="Status"   value={more?.status  || anime.status} />
+                <MetaRow label="Aired"    value={more?.aired   || anime.startDate} />
+                <MetaRow label="Ended"    value={more?.ended   || anime.endDate} />
+                <MetaRow label="Season"   value={more?.season  || anime.season} />
+                <MetaRow label="Episodes" value={anime.episodes?.sub > 0 ? anime.episodes.sub : more?.episodes} />
+                <MetaRow label="Duration" value={more?.duration || anime.duration} />
+                <MetaRow label="Studio"   value={more?.studios || anime.studios} />
+                <MetaRow label="Source"   value={more?.source  || anime.source} />
+                <MetaRow label="Score"    value={more?.score} />
+                <MetaRow label="Rank"     value={more?.rank} />
+                <MetaRow label="Format"   value={more?.type    || anime.type} />
+              </div>
+
+              {/* Tags */}
+              {(more?.tags || anime.tags || []).length > 0 && (
+                <div className={styles.tagsBlock}>
+                  <p className={styles.tagsLabel}>Tags</p>
+                  <div className={styles.tagsRow}>
+                    {(more?.tags || anime.tags || []).slice(0, 10).map(t => (
+                      <span key={typeof t === "string" ? t : t.name} className={styles.tagPill}>
+                        {typeof t === "string" ? t : t.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Synonyms */}
+              {more?.synonyms?.length > 0 && (
+                <div className={styles.tagsBlock}>
+                  <p className={styles.tagsLabel}>Also Known As</p>
+                  {more.synonyms.map(s => (
+                    <p key={s} className={styles.synonymLine}>{s}</p>
+                  ))}
+                </div>
+              )}
+
+              {/* Trailer */}
+              {(more?.trailer || anime.trailer) && (
+                <div className={styles.trailerBlock}>
+                  <p className={styles.tagsLabel}>Trailer</p>
+                  {(() => {
+                    const t = more?.trailer || anime.trailer;
+                    const url = t?.site === "youtube"
+                      ? `https://www.youtube.com/watch?v=${t.id}`
+                      : t?.site === "dailymotion"
+                      ? `https://www.dailymotion.com/video/${t.id}`
+                      : null;
+                    return url ? (
+                      <a href={url} target="_blank" rel="noreferrer" className={styles.trailerBtn}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                        Watch Trailer ↗
+                      </a>
+                    ) : null;
+                  })()}
+                </div>
+              )}
+
+              {/* External links */}
+              {more?.externalLinks?.length > 0 && (
+                <div className={styles.tagsBlock}>
+                  <p className={styles.tagsLabel}>Stream On</p>
+                  <div className={styles.extLinks}>
+                    {more.externalLinks.map(l => (
+                      <a key={l.site} href={l.url} target="_blank" rel="noreferrer" className={styles.extLink}>
+                        {l.site}
+                      </a>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
-}
-function DetailSkeleton() {
-  return (
-    <div>
-      <div className="skeleton" style={{ height: 460 }} />
-      <div className="container" style={{ paddingTop: 36 }}>
-        <div className="skeleton" style={{ height: 260, borderRadius: "var(--r-xl)" }} />
+          </aside>
+        </div>
+
+        {/* ── FULL-WIDTH: Related, Recommended, You May Like ── */}
+        <div className={styles.bottomSections}>
+          <AnimeSection title="Related Anime"     items={related} columns={4} />
+          <AnimeSection title="Recommended"       items={recs.slice(0, 8)}    columns={4} />
+
+          {/* You May Like: mix of recs tail + related */}
+          {(recs.length > 8 || related.length > 0) && (
+            <AnimeSection
+              title="You May Also Like"
+              items={[...recs.slice(8, 16), ...related].slice(0, 8)}
+              columns={4}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

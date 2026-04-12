@@ -122,13 +122,13 @@ export const CRYSOLINE_SOURCES = [
   { id: "anizone",       name: "Anizone",        site: "anizone.to",    langs: ["en","ja"], hasServers: false },
 
   // ── INACTIVE SOURCES (commented out — re-enable as needed) ───────────────
+  { id: "animekai",      name: "AnimeKai",      site: "anikai.to",              langs: ["en","ja"],        hasServers: false },
+  { id: "kickassanime",  name: "KickAssAnime",  site: "kaa.it",                langs: ["en","ja"],        hasServers: false },
+  { id: "animeparadise", name: "AnimeParadise", site: "animeparadise.moe",      langs: ["en","ja"],        hasServers: false },
   // { id: "animeheaven",   name: "AnimeHeaven",   site: "animeheaven.me",         langs: ["en","ja"],        hasServers: false },
-  // { id: "animekai",      name: "AnimeKai",      site: "anikai.to",              langs: ["en","ja"],        hasServers: false },
   // { id: "animeyy",       name: "AnimeYY",       site: "animeyy.com",            langs: ["en","ja"],        hasServers: false },
   // { id: "animenexus",    name: "AnimeNexus",    site: "anime.nexus",            langs: ["en","ja"],        hasServers: false },
   // { id: "animeonsen",    name: "AnimeOnsen",    site: "animeonsen.xyz",         langs: ["en","ja"],        hasServers: false },
-  // { id: "animeparadise", name: "AnimeParadise", site: "animeparadise.moe",      langs: ["en","ja"],        hasServers: false },
-  // { id: "kickassanime",  name: "KickAssAnime",  site: "kaa.it",                langs: ["en","ja"],        hasServers: false },
   // { id: "uniquestream",  name: "UniqueStream",  site: "anime.uniquestream.net", langs: ["en","ja"],        hasServers: false },
   // { id: "animerevival",  name: "AnimeRevival",  site: "animerevival.xyz",       langs: ["en","ja","tl"],   hasServers: false },
   // ── Sources with server selection ────────────────────────────────────────
@@ -159,9 +159,10 @@ export const ALL_SOURCE_IDS = CRYSOLINE_SOURCES.map(s => s.id);
 // Only active sources are listed here — inactive ones are commented out.
 export const FALLBACK_SOURCE_IDS = [
   "animepahe",
+  "animekai",
+  "kickassanime",
+  "animeparadise",
   "anizone",
-  // "kickassanime",  // re-enable when source is re-activated
-  // "animekai",      // re-enable when source is re-activated
   // "animeheaven",   // re-enable when source is re-activated
   // "animenexus",    // re-enable when source is re-activated
 ];

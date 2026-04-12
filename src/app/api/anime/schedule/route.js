@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+export const revalidate = 3600; // Schedule changes at most hourly
 
 // Helper: get Unix timestamps for start and end of current week (Mon–Sun)
 function getWeekRange() {
@@ -99,7 +100,9 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json({ schedule: grouped, days: DAYS });
+    return NextResponse.json({ schedule: grouped, days: DAYS }, {
+      headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=7200" },
+    });
   } catch (e) {
     console.error("[schedule] error:", e.message);
     return NextResponse.json({ error: e.message }, { status: 500 });

@@ -1,0 +1,22 @@
+name = "animedex-proxy"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# ── Deployment ────────────────────────────────────────────────────────────────
+# After `wrangler deploy`, your worker will be live at:
+#   https://anistream-proxy.<your-cf-subdomain>.workers.dev
+#
+# Set NEXT_PUBLIC_PROXY_URL in your Vercel env to that URL.
+
+# ── Environment variables ─────────────────────────────────────────────────────
+[vars]
+# Set this to your Vercel deployment URL to block external proxy abuse.
+# e.g. "https://yoursite.vercel.app" or your custom domain.
+# Leave empty ("") to allow all origins (less secure, fine for testing).
+ALLOWED_ORIGIN = "https://animedex.pp.ua"
+
+# ── Routes (optional custom domain) ──────────────────────────────────────────
+# Uncomment and fill in if you want the proxy on your own domain:
+# [[routes]]
+# pattern = "proxy.yourdomain.com/*"
+# zone_name = "yourdomain.com"

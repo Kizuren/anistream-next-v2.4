@@ -1,5 +1,7 @@
 export const maxDuration = 30;
-export const dynamic = "force-dynamic";
+// Remove force-dynamic — anime info changes rarely. Let Vercel CDN cache it.
+export const dynamic = "force-static";
+export const revalidate = 3600; // Regenerate at most every hour
 
 import { NextResponse } from "next/server";
 import { getAnimeInfo } from "@/lib/scraper";
@@ -12,7 +14,9 @@ export async function GET(request, { params }) {
 
   // 1. Try fresh cache first (6 hour TTL)
   const cached = await getCachedAsync(key);
-  if (cached) return NextResponse.json(cached);
+  if (cached) return NextResponse.json(cached, {
+    headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=86400" },
+  });
 
   // 2. Try live fetch
   try {
@@ -25,7 +29,9 @@ export async function GET(request, { params }) {
     await setCachedAsync(key,      data, 6 * 60 * 60);  // 6 hours
     setCachedAsync(staleKey, data, 24 * 60 * 60).catch(() => {}); // 24h stale backup
 
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=86400" },
+    });
 
   } catch (err) {
     console.error(`[info/${id}]`, err.message);

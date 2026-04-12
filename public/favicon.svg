@@ -1,10 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#e85d4a"/>
-      <stop offset="100%" stop-color="#f0a500"/>
-    </linearGradient>
+    <radialGradient id="bg" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#1c0812"/><stop offset="100%" stop-color="#07060b"/></radialGradient>
+    <radialGradient id="sk" cx="50%" cy="35%" r="55%"><stop offset="0%" stop-color="#d4455a"/><stop offset="60%" stop-color="#c0394d"/><stop offset="100%" stop-color="#8b1a28"/></radialGradient>
+    <radialGradient id="eg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff4060" stop-opacity=".9"/><stop offset="100%" stop-color="#8b1a28" stop-opacity=".3"/></radialGradient>
+    <filter id="gl"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   </defs>
-  <circle cx="16" cy="16" r="15" fill="url(#g)"/>
-  <polygon points="13,10 22,16 13,22" fill="white"/>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Horns -->
+  <path d="M15 5 C12 14 17 23 21 27 C17 21 12 13 15 5Z" fill="#c0394d" opacity=".85"/>
+  <path d="M49 5 C52 14 47 23 43 27 C47 21 52 13 49 5Z" fill="#c0394d" opacity=".85"/>
+  <!-- Cranium -->
+  <ellipse cx="32" cy="27" rx="17" ry="15" fill="url(#sk)" filter="url(#gl)"/>
+  <!-- Jaw area -->
+  <path d="M17 35 C16 43 19 50 23 52 L24 52 C21 49 18 44 18 38Z" fill="#c0394d" opacity=".65"/>
+  <path d="M47 35 C48 43 45 50 41 52 L40 52 C43 49 46 44 46 38Z" fill="#c0394d" opacity=".65"/>
+  <path d="M23 44 Q32 50 41 44 L40 53 Q32 57 24 53Z" fill="#8b1a28"/>
+  <!-- Teeth -->
+  <rect x="24" y="50" width="3" height="5" rx="1" fill="#f0eaf5" opacity=".9"/>
+  <rect x="28.5" y="50" width="3" height="6" rx="1" fill="#f0eaf5" opacity=".9"/>
+  <rect x="33" y="50" width="3" height="5" rx="1" fill="#f0eaf5" opacity=".9"/>
+  <!-- Nose -->
+  <path d="M29 34 L32 30 L35 34 L34 38 L30 38Z" fill="#07060b" opacity=".85"/>
+  <!-- Left eye -->
+  <ellipse cx="23" cy="26" rx="5.5" ry="5" fill="#07060b" opacity=".9"/>
+  <ellipse cx="23" cy="26" rx="3.5" ry="3.2" fill="url(#eg)" filter="url(#gl)"/>
+  <ellipse cx="23" cy="26" rx="1.5" ry="2.8" fill="#07060b"/>
+  <ellipse cx="22" cy="24.5" rx=".8" ry="1.1" fill="rgba(255,255,255,.4)" transform="rotate(-10,22,24.5)"/>
+  <!-- Right eye -->
+  <ellipse cx="41" cy="26" rx="5.5" ry="5" fill="#07060b" opacity=".9"/>
+  <ellipse cx="41" cy="26" rx="3.5" ry="3.2" fill="url(#eg)" filter="url(#gl)"/>
+  <ellipse cx="41" cy="26" rx="1.5" ry="2.8" fill="#07060b"/>
+  <ellipse cx="40" cy="24.5" rx=".8" ry="1.1" fill="rgba(255,255,255,.4)" transform="rotate(-10,40,24.5)"/>
+  <!-- Crack -->
+  <path d="M32 12 L31 19 L33 23 L32 27" fill="none" stroke="rgba(139,26,40,.55)" stroke-width=".8" stroke-linecap="round"/>
 </svg>

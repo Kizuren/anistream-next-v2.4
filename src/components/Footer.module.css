@@ -1,341 +1,178 @@
-/* ═══════════════════════════════════════════════════════════
-   Footer — futuristic dark design with glow accents
-   ═══════════════════════════════════════════════════════════ */
-
 .footer {
   position: relative;
-  background: linear-gradient(
-    180deg,
-    var(--bg-card) 0%,
-    rgba(10, 11, 15, 1) 100%
-  );
+  background: linear-gradient(180deg, var(--bg-card) 0%, rgba(4,3,8,1) 100%);
   border-top: 1px solid var(--border);
   margin-top: 80px;
   overflow: hidden;
 }
 
-/* Glowing accent line at the very top of the footer */
 .glowLine {
   position: absolute;
-  top: 0;
-  left: 50%;
+  top: 0; left: 50%;
   transform: translateX(-50%);
-  width: 60%;
+  width: 55%;
   height: 1px;
-  background: linear-gradient(
-    90deg,
+  background: linear-gradient(90deg,
     transparent 0%,
     var(--accent) 30%,
-    var(--accent-hover) 50%,
+    var(--purple) 50%,
     var(--accent) 70%,
-    transparent 100%
-  );
-  box-shadow: 0 0 24px 4px var(--accent-glow);
-  opacity: 0.7;
+    transparent 100%);
+  box-shadow: 0 0 28px 4px rgba(192,57,77,0.25);
+  opacity: 0.65;
   pointer-events: none;
 }
 
-/* ── Main grid ──────────────────────────────────────────── */
 .inner {
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: 56px 28px 44px;
   display: grid;
-  grid-template-columns: 2.2fr 1fr 1fr 1fr;
-  gap: 48px;
+  grid-template-columns: 1.6fr 1fr 1fr;
+  gap: 60px;
+  padding-top: 56px;
+  padding-bottom: 48px;
 }
 
-/* ── Brand column ────────────────────────────────────────── */
+/* ── Brand ── */
+.brand { display: flex; flex-direction: column; gap: 16px; }
+
 .logoWrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
+  display: inline-flex; align-items: center; gap: 12px;
   text-decoration: none;
 }
 
 .logoIcon {
-  width: 32px;
-  height: 32px;
-  background: var(--accent);
-  border-radius: var(--r-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, var(--accent-deep), var(--accent));
+  border-radius: var(--r-lg);
+  display: flex; align-items: center; justify-content: center;
   color: #fff;
+  box-shadow: 0 4px 20px var(--accent-glow);
   flex-shrink: 0;
-  transition: box-shadow var(--t-base), transform var(--t-base);
-  box-shadow: 0 0 16px var(--accent-glow);
 }
 
-.logoWrap:hover .logoIcon {
-  box-shadow: 0 0 28px var(--accent-glow);
-  transform: scale(1.08) rotate(-3deg);
-}
-
-.logoText {
+.logoText { display: flex; flex-direction: row; align-items: baseline; gap: 0; }
+.logoMain {
   font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 16px; font-weight: 700;
+  letter-spacing: 0.10em;
   color: var(--text-1);
-  letter-spacing: -0.4px;
+  text-transform: uppercase;
+}
+.logoDex {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 700;
+  letter-spacing: 0.10em;
+  color: var(--accent);
+  text-transform: uppercase;
 }
 
 .brandDesc {
-  font-size: 13px;
-  color: var(--text-3);
-  line-height: 1.8;
-  margin-bottom: 20px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--text-2);
+  line-height: 1.65;
   max-width: 260px;
 }
 
-/* Status indicator */
-.statusPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 12px;
-  background: rgba(53, 212, 176, 0.07);
-  border: 1px solid rgba(53, 212, 176, 0.18);
-  border-radius: 99px;
-  font-size: 11.5px;
-  color: var(--accent-3);
-  font-weight: 500;
-  margin-bottom: 20px;
-  width: fit-content;
-}
-
-.statusDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent-3);
-  box-shadow: 0 0 8px var(--accent-3);
-  animation: pulse 2.4s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.75); }
-}
-
-.socialRow {
-  display: flex;
-  gap: 8px;
-}
-
-.socialBtn {
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-md);
-  border-radius: var(--r-md);
-  color: var(--text-3);
-  transition:
-    border-color var(--t-fast),
-    color var(--t-fast),
-    background var(--t-fast),
-    box-shadow var(--t-fast),
-    transform var(--t-fast);
-}
-
-.socialBtn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-dim);
-  box-shadow: 0 0 12px var(--accent-glow);
-  transform: translateY(-2px);
-}
-
-/* ── Link columns ────────────────────────────────────────── */
-.col {
+/* ── API Status ── */
+.apiStatus {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding-top: 4px;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  max-width: 240px;
 }
+
+.apiStatusLabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-family: var(--font-body);
+}
+
+.statusRow { display: flex; align-items: center; gap: 8px; }
+.statusName { font-size: 13px; font-weight: 500; color: var(--text-1); flex: 1; }
+
+.statusBadge {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
+  padding: 2px 8px; border-radius: 99px;
+}
+.badgeUp       { background: rgba(39,174,96,0.14); color: #5dd47a; border: 1px solid rgba(39,174,96,0.22); }
+.badgeDown     { background: rgba(192,57,77,0.14); color: #e06070; border: 1px solid rgba(192,57,77,0.24); }
+.badgeChecking { background: rgba(255,255,255,0.06); color: var(--text-3); border: 1px solid var(--border-md); }
+
+.statusNote { font-size: 10px; color: var(--text-3); }
+
+.dotChecking, .dotUp, .dotDown {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dotChecking { background: var(--text-4); animation: pulse 1.5s ease-in-out infinite; }
+.dotUp       { background: #5dd47a; box-shadow: 0 0 6px rgba(93,212,122,0.5); }
+.dotDown     { background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+/* ── Columns ── */
+.col { display: flex; flex-direction: column; gap: 4px; }
 
 .colHeading {
   font-family: var(--font-display);
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-weight: 600;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 18px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.colHeading::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, var(--border-md), transparent);
+  margin-bottom: 12px;
 }
 
 .colLink {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--text-2);
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--text-2);
   padding: 5px 0;
-  transition:
-    color var(--t-fast),
-    gap var(--t-fast),
-    padding-left var(--t-fast);
-  border-radius: var(--r-sm);
-  text-decoration: none;
-  position: relative;
+  transition: color var(--t-fast), padding-left var(--t-fast);
 }
+.colLink:hover { color: var(--text-1); padding-left: 4px; }
+.linkChevron { color: var(--text-4); font-size: 14px; flex-shrink: 0; transition: color var(--t-fast); }
+.colLink:hover .linkChevron { color: var(--accent); }
 
-.colLink:hover {
-  color: var(--text-1);
-  padding-left: 6px;
-}
-
-.linkArrow {
-  font-size: 15px;
-  color: var(--accent);
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity var(--t-fast), transform var(--t-fast);
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.colLink:hover .linkArrow {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* ── Bottom bar ─────────────────────────────────────────── */
+/* ── Bottom bar ── */
 .bottom {
   border-top: 1px solid var(--border);
-  padding: 16px 28px;
-  max-width: var(--container);
-  margin: 0 auto;
+  padding: 18px 28px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
 .disclaimer {
-  font-size: 11px;
-  color: var(--text-4);
-  line-height: 1.6;
-  max-width: 520px;
+  font-size: 11.5px; color: var(--text-3); max-width: 500px; line-height: 1.5;
 }
-
-.bottomRight {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.divider { color: var(--text-4); font-size: 12px; }
 
 .copy {
-  font-size: 11.5px;
-  color: var(--text-3);
-  white-space: nowrap;
-}
-
-/* ── Responsive ─────────────────────────────────────────── */
-@media (max-width: 1100px) {
-  .inner { grid-template-columns: 1.8fr 1fr 1fr; gap: 36px; }
-  /* hide 4th column (Info) — move it into brand on small layouts */
-  .col:last-child { display: none; }
-}
-
-@media (max-width: 800px) {
-  .inner {
-    grid-template-columns: 1fr 1fr;
-    gap: 28px;
-    padding: 40px 20px 32px;
-  }
-  .brand { grid-column: span 2; }
-  .col:last-child { display: flex; } /* restore Info col */
-}
-
-@media (max-width: 480px) {
-  .inner {
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    padding: 32px 16px 24px;
-  }
-  .bottom { padding: 14px 16px; flex-direction: column; align-items: flex-start; gap: 6px; }
-  .glowLine { width: 90%; }
-  .brandDesc { max-width: 100%; }
-}
-
-/* ── API Status column ───────────────────────────────────────────────────── */
-
-.statusList {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.statusRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.statusName {
-  font-size: 13px;
-  color: var(--text-2, #888);
-  flex: 1;
-}
-
-.statusBadge {
-  font-size: 10.5px;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 99px;
-}
-.badgeUp   { background: rgba(34, 197, 94, 0.12); color: #22c55e; }
-.badgeDown { background: rgba(239, 68, 68, 0.12);  color: #ef4444; }
-
-.statusNote {
-  font-size: 10.5px;
-  color: var(--text-3, #555);
-  margin-top: 10px;
-}
-
-/* ── Status dots ─────────────────────────────────────────────────────────── */
-
-.dotUp, .dotDown, .dotChecking {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  color: var(--text-4);
   flex-shrink: 0;
 }
-.dotUp       { background: #22c55e; box-shadow: 0 0 6px #22c55e88; }
-.dotDown     { background: #ef4444; box-shadow: 0 0 6px #ef444488; }
-.dotChecking { background: #888; animation: pulse 1.4s ease-in-out infinite; }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.35; }
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .inner { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .brand { grid-column: 1 / -1; }
 }
 
-/* ── Overall status pill variants ────────────────────────────────────────── */
-
-.pillUp       .statusDot, .dotUp       { background: #22c55e; }
-.pillDown     .statusDot, .dotDown     { background: #ef4444; }
-.pillChecking .statusDot, .dotChecking { background: #888; }
-
-.pillDown  { border-color: rgba(239, 68, 68, 0.3)  !important; color: #ef4444 !important; }
-.pillUp    { border-color: rgba(34, 197, 94, 0.3)  !important; color: #22c55e !important; }
+@media (max-width: 560px) {
+  .inner { grid-template-columns: 1fr; gap: 32px; padding-top: 40px; }
+  .bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
