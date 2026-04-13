@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Fix Next.js 15 cross-origin dev warning (local network access)
+  // Add your local IP if you test on mobile over LAN
+  allowedDevOrigins: ["localhost", "127.0.0.1"],
+
   cleanDistDir: true,
   reactStrictMode: true,
   // Next 15: server actions are stable (no longer experimental)
@@ -74,7 +78,9 @@ const nextConfig = {
               "font-src 'self' https://fonts.gstatic.com https://theanimecommunity.com",
               "img-src 'self' data: https: blob:",
               // PROBLEM 1 FIX: blob: is required for hls.js MSE; 'self' covers /api/proxy
-              "media-src 'self' blob: data:",
+              // Allow CF worker URL and any CDN for video streaming
+              // The CF worker redirects to CDN URLs, so we need https://* here
+              `media-src 'self' blob: data: https://* ${cfProxyUrl}`,
               `frame-src ${frameHosts}`,
               `connect-src ${connectSrc}`,
               // PROBLEM 3 FIX: worker-src for hls.js web worker

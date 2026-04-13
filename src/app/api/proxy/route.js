@@ -82,7 +82,7 @@ function rewriteM3U8Dev(text, manifestUrl, referer, origin) {
   }).join("\n");
 }
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export async function GET(request) {
@@ -99,7 +99,7 @@ export async function GET(request) {
     const cfUrl = new URL(`${CF_PROXY}/proxy`);
     cfUrl.searchParams.set("url", rawUrl);
     if (referer) cfUrl.searchParams.set("referer", referer);
-    return NextResponse.redirect(cfUrl.toString(), 302);
+    return NextResponse.redirect(cfUrl.toString(), 307);
   }
 
   // ── Development fallback ──────────────────────────────────────────────────
@@ -192,7 +192,7 @@ export async function HEAD(request) {
     const cfUrl = new URL(`${CF_PROXY}/proxy`);
     cfUrl.searchParams.set("url", rawUrl);
     if (referer) cfUrl.searchParams.set("referer", referer);
-    return NextResponse.redirect(cfUrl.toString(), 302);
+    return NextResponse.redirect(cfUrl.toString(), 307);
   }
 
   let targetUrl;

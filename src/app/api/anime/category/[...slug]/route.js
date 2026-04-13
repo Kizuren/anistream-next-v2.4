@@ -3,7 +3,8 @@ import { getCategoryAnimes } from "@/lib/scraper";
 import { getCachedAsync, setCachedAsync } from "@/lib/cache";
 
 export async function GET(request, { params }) {
-  const category = params.slug?.join("/") || "";
+  const { slug } = (await params);
+  const category = slug?.join("/") || "";
   const { searchParams } = new URL(request.url);
   const page = searchParams.get("page") || "1";
   const key  = `cat:${category}:${page}`;

@@ -12,7 +12,7 @@ import { mapAnilistToEnSources, CRYSOLINE_SOURCES } from "@/lib/crysoline";
 import { PROVIDERS, buildEmbedUrl } from "@/lib/providers";
 
 export async function GET(request, { params }) {
-  const { slug } = params;
+  const { slug } = params; // already awaited above
   const anilistId = idFromSlug(slug);
   if (!anilistId) return NextResponse.json({ error: "No AniList ID in slug" });
 

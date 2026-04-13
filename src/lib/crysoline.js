@@ -64,12 +64,14 @@ async function cryGet(path, params = {}, timeoutMs = 20000, retries = 1, signal4
       }
 
       if (status === 429) {
+        // Back off progressively: 3s, 8s, 20s — Crysoline blocks for longer than 1s
+        const wait = Math.min(3000 * Math.pow(2.5, attempt), 30000);
         if (attempt < retries) {
-          const wait = Math.pow(2, attempt) * 1000;
-          console.log(`[crysoline] 429 — waiting ${wait}ms`);
+          console.log(`[crysoline] 429 — waiting ${Math.round(wait / 1000)}s (attempt ${attempt + 1})`);
           await sleep(wait);
           continue;
         }
+        console.log(`[crysoline] 429 — giving up on ${path}`);
         return null;
       }
 

@@ -230,8 +230,10 @@ export default function WatchClient({ animeId, epSlug }) {
 
   // ── Automatic source fallback chain ───────────────────────────────────────
   const tryFallback = useCallback(async (failedSourceId, subType, server) => {
+    // Only fall back to active sources (those in CRYSOLINE_SOURCES)
+    const activeIds   = CRYSOLINE_SOURCES.map(s => s.id);
     const fallbackIds = [DEFAULT_SOURCE_ID, ...FALLBACK_SOURCE_IDS]
-      .filter(id => id !== failedSourceId && !sourceMap[id]);
+      .filter(id => id !== failedSourceId && !sourceMap[id] && activeIds.includes(id));
 
     for (const fid of fallbackIds) {
       try {
@@ -284,12 +286,19 @@ export default function WatchClient({ animeId, epSlug }) {
     if (streamRaceRan.current) return;
     streamRaceRan.current = true;
 
-    const pref         = loadSourcePref();
-    const preferredId  = pref.sourceId || DEFAULT_SOURCE_ID;
-    const allSrcIds    = [
+    const pref        = loadSourcePref();
+    const preferredId = pref.sourceId || DEFAULT_SOURCE_ID;
+
+    // Only probe sources that are actually defined in CRYSOLINE_SOURCES (active ones).
+    // This prevents "mapper missed kickassanime/animeparadise" log spam from
+    // trying sources that are commented out.
+    const activeIds = CRYSOLINE_SOURCES.map(s => s.id);
+    const allSrcIds = [
       preferredId,
-      ...[DEFAULT_SOURCE_ID, ...FALLBACK_SOURCE_IDS].filter(id => id !== preferredId),
-    ];
+      ...[DEFAULT_SOURCE_ID, ...FALLBACK_SOURCE_IDS].filter(
+        id => id !== preferredId && activeIds.includes(id)
+      ),
+    ].filter((id, i, arr) => arr.indexOf(id) === i); // deduplicate
 
     if (pref.subType) setCrySubType(pref.subType);
 

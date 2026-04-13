@@ -28,42 +28,47 @@
 // ─── Host allowlist ───────────────────────────────────────────────────────────
 // Only proxy requests to these hostnames. This prevents open-proxy abuse.
 // Pattern: exact match OR subdomain match (*.example.com).
+// ── Host allowlist ─────────────────────────────────────────────────────────────
+// Supports exact match and wildcard subdomain match (*.example.com).
+// Add hosts as you encounter new CDNs in real traffic logs.
 const ALLOWED_HOSTS = [
-  // ── AnimeGG ──────────────────────────────────────────────
-  "animegg.org",          // signed .mp4 play URLs: animegg.org/play/…
-  "v6.animegg.org",
-  "cdn.animegg.org",
-  "s1.animegg.org", "s2.animegg.org", "s3.animegg.org",
-  "seiryuu.vid-cdn.xyz",  // AnimeGG CDN seen in real traffic
-  "vid-cdn.xyz",
+  // ── AnimeGG ──────────────────────────────────────────────────────────────
+  "animegg.org",          // signed .mp4 play URLs from animegg.org/play/…
+  "vid-cdn.xyz",          // AnimeGG CDN — covers seiryuu.vid-cdn.xyz etc.
 
-  // ── AnimePahe / kwik.cx ───────────────────────────────────
-  "kwik.cx",
-  "eu.kwik.cx", "na.kwik.cx", "www.kwik.cx",
-  "animepahe.com", "animepahe.org", "animepahe.ru", "animepahe.si",
+  // ── AnimePahe / kwik.cx ──────────────────────────────────────────────────
+  "kwik.cx",              // covers eu.kwik.cx, na.kwik.cx via subdomain match
+  "animepahe.com",
+  "animepahe.org",
+  "animepahe.ru",
+  "animepahe.si",
 
-  // ── Anizone ───────────────────────────────────────────────
-  "anizone.to",
-  "cdn.anizone.to",
-  "player.anizone.to",
+  // ── Anizone ──────────────────────────────────────────────────────────────
+  "anizone.to",           // covers cdn.anizone.to, player.anizone.to
 
-  // ── CDNs seen in real traffic (from logs) ─────────────────
-  "vault-14.owocdn.top",   // AnimePahe segments
-  "owocdn.top",
-  "akamai.net",
+  // ── AnimePahe CDN (owocdn) ───────────────────────────────────────────────
+  "owocdn.top",           // covers vault-14.owocdn.top etc.
 
-  // ── AniSkip ───────────────────────────────────────────────
+  // ── AniSkip ──────────────────────────────────────────────────────────────
   "api.aniskip.com",
 
-  // ── Wildcard — catch unlisted CDNs ────────────────────────
-  // Comment this out once you've catalogued all CDNs for stricter security.
+  // ── Cloudflare-served CDNs ───────────────────────────────────────────────
+  "cdnfile.anilab.to",
+  "anilab.to",
+
+  // ── Safety wildcard — keep enabled until all CDNs are catalogued ─────────
+  // Remove this and add specific hosts for production hardening.
   "*",
 ];
 
 function isAllowedHost(hostname) {
-  if (ALLOWED_HOSTS.includes("*")) return true;
   const h = hostname.toLowerCase();
-  return ALLOWED_HOSTS.some(allowed => h === allowed || h.endsWith("." + allowed));
+  // Wildcard bypass
+  if (ALLOWED_HOSTS.includes("*")) return true;
+  // Exact match OR subdomain match: "vid-cdn.xyz" matches "seiryuu.vid-cdn.xyz"
+  return ALLOWED_HOSTS.some(allowed =>
+    h === allowed || h.endsWith("." + allowed)
+  );
 }
 
 // ─── M3U8 rewriter ────────────────────────────────────────────────────────────

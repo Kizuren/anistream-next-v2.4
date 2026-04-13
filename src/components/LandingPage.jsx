@@ -30,7 +30,7 @@ function SkullHero() {
       transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
     >
       <motion.svg
-        width="220" height="260" viewBox="0 0 220 260"
+        viewBox="0 0 220 260"
         className={styles.skullSvg}
         animate={{ y: [0, -10, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}

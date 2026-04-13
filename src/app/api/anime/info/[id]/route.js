@@ -7,7 +7,7 @@ import { getAnimeInfo } from "@/lib/scraper";
 import { getCachedAsync, setCachedAsync, saveAnimeMeta } from "@/lib/cache";
 
 export async function GET(request, { params }) {
-  const { id }     = params;
+  const { id }     = (await params);
   const key        = `info:${id}`;
   const staleKey   = `info_stale:${id}`; // long-lived backup copy
 

@@ -1,8 +1,7 @@
 export const maxDuration = 30;
 // Cache episodes at Vercel CDN edge — episode lists change rarely.
 // Per-ID caching: CDN stores a separate response for each anime slug.
-export const dynamic = "force-static";
-export const revalidate = 3600; // Re-fetch at most every hour
+export const revalidate = 3600; // ISR: re-fetch at most every hour
 
 import { NextResponse } from "next/server";
 import { idFromSlug } from "@/lib/anilist";
@@ -10,7 +9,7 @@ import { getEpisodeList } from "@/lib/episodes";
 import { getCachedAsync, setCachedAsync } from "@/lib/cache";
 
 export async function GET(request, { params }) {
-  const { id }    = params;
+  const { id }    = (await params);
   const anilistId = idFromSlug(id);
   if (!anilistId) return NextResponse.json({ episodes: [], totalEpisodes: 0, error: "Invalid slug" });
 

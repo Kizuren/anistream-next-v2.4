@@ -1,3 +1,4 @@
+/* ── Page container ── */
 .page {
   position: fixed;
   inset: 0;
@@ -6,15 +7,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow-y: auto;   /* allow scroll if content taller than viewport */
+  overflow-x: hidden;
 }
 
 /* Ember particles */
 .embers {
-  position: absolute;
+  position: fixed;    /* fixed so they don't scroll with content */
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  z-index: 0;
 }
 .ember {
   position: absolute;
@@ -24,28 +27,31 @@
   box-shadow: 0 0 8px rgba(192,57,77,0.7);
 }
 
-/* Radial glows */
+/* Radial glows — fixed so they don't move on scroll */
 .radialGlow {
-  position: absolute;
+  position: fixed;
   top: 50%; left: 50%;
   transform: translate(-50%, -55%);
   width: 600px; height: 600px;
   background: radial-gradient(ellipse, rgba(192,57,77,0.12) 0%, transparent 70%);
   pointer-events: none;
+  z-index: 0;
 }
 .radialGlow2 {
-  position: absolute;
+  position: fixed;
   bottom: -100px; left: 50%;
   transform: translateX(-50%);
   width: 800px; height: 400px;
   background: radial-gradient(ellipse, rgba(155,89,182,0.08) 0%, transparent 65%);
   pointer-events: none;
+  z-index: 0;
 }
 
-/* Skip */
+/* Skip button */
 .skipBtn {
-  position: absolute;
+  position: fixed;
   top: 24px; right: 28px;
+  z-index: 10;
   font-size: 12px; font-weight: 500;
   color: var(--text-3);
   letter-spacing: 0.08em;
@@ -54,21 +60,24 @@
   border-radius: var(--r-md);
   cursor: pointer;
   transition: color var(--t-fast), border-color var(--t-fast);
-  background: transparent;
+  background: rgba(7,6,11,0.6);
+  backdrop-filter: blur(8px);
 }
 .skipBtn:hover { color: var(--text-2); border-color: var(--border-md); }
 
-/* Main content column */
+/* ── Main content column ── */
 .content {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
   width: 100%;
   max-width: 600px;
-  padding: 40px 24px;
-  position: relative;
-  z-index: 2;
+  padding: 80px 24px 60px; /* top padding so skull clears the skip btn */
+  min-height: 100vh;        /* fill viewport but allow scroll */
+  justify-content: center;
 }
 
 /* Skull */
@@ -77,9 +86,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 .skullSvg {
   filter: drop-shadow(0 0 32px rgba(192,57,77,0.5)) drop-shadow(0 0 80px rgba(192,57,77,0.2));
+  /* Prevent the skull from being cut off on small screens */
+  max-width: min(220px, 55vw);
+  height: auto;
 }
 .skullGlow {
   position: absolute;
@@ -100,13 +113,13 @@
 }
 .title {
   font-family: var(--font-display);
-  font-size: clamp(38px, 8vw, 72px);
+  font-size: clamp(32px, 10vw, 72px);
   font-weight: 900;
   letter-spacing: 0.06em;
   line-height: 1;
 }
 .titleAnime { color: var(--text-1); }
-.titleDex   {
+.titleDex {
   color: var(--accent);
   text-shadow: 0 0 40px rgba(192,57,77,0.55), 0 0 80px rgba(192,57,77,0.25);
 }
@@ -120,9 +133,8 @@
   border-radius: var(--r-xl);
   padding: 20px 24px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(192,57,77,0.08);
-  min-height: 140px;
+  min-height: 130px;
 }
-
 .speakerTag {
   display: flex; align-items: center; gap: 7px;
   font-family: var(--font-display);
@@ -136,6 +148,7 @@
   background: var(--accent);
   box-shadow: 0 0 8px rgba(192,57,77,0.8);
   animation: speakerPulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
 }
 @keyframes speakerPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
@@ -143,7 +156,7 @@
 .dialogueLine {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 15px;
+  font-size: clamp(13px, 3.5vw, 15px);
   color: var(--text-2);
   line-height: 1.65;
   letter-spacing: 0.01em;
@@ -160,14 +173,16 @@
 .ctaBlock { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .enterBtn {
   display: inline-flex; align-items: center; gap: 10px;
-  padding: 16px 40px;
+  padding: 15px 36px;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
   color: #fff;
   border-radius: var(--r-xl);
   font-family: var(--font-display);
-  font-size: 15px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;
+  font-size: clamp(12px, 3.5vw, 15px); font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
   cursor: pointer;
   position: relative; overflow: hidden;
+  white-space: nowrap;
 }
 .enterBtn::before {
   content: '';
@@ -182,11 +197,12 @@
 
 /* Bottom streak */
 .bottomStreak {
-  position: absolute;
+  position: fixed;
   bottom: 0; left: 0; right: 0;
   height: 2px;
   background: linear-gradient(90deg, transparent 0%, rgba(192,57,77,0.6) 30%, rgba(155,89,182,0.6) 50%, rgba(192,57,77,0.6) 70%, transparent 100%);
   box-shadow: 0 0 24px 4px rgba(192,57,77,0.3);
+  z-index: 1;
 }
 
 /* Leaving overlay */
@@ -195,9 +211,18 @@
   background: var(--bg);
 }
 
-@media (max-width: 560px) {
-  .content { gap: 20px; padding: 24px 16px; }
-  .dialogueBox { padding: 16px; }
-  .dialogueLine { font-size: 14px; }
-  .enterBtn { padding: 14px 28px; font-size: 13px; }
+/* ── Responsive — short screens ── */
+@media (max-height: 700px) {
+  .content { gap: 16px; padding: 60px 20px 40px; }
+  .skullSvg { max-width: 140px; }
+  .dialogueBox { min-height: auto; }
+}
+
+/* ── Responsive — narrow screens ── */
+@media (max-width: 480px) {
+  .content { gap: 18px; padding: 70px 16px 50px; }
+  .dialogueBox { padding: 14px 16px; }
+  .dialogueLine { font-size: 13px; }
+  .enterBtn { padding: 13px 24px; }
+  .skipBtn { top: 16px; right: 16px; }
 }
