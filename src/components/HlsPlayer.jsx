@@ -803,15 +803,22 @@ export default function HlsPlayer({
     const onLeavePip = () => setPip(false);
 
     let rafId;
+    let lastStateUpdate = 0;
     const updateProgress = () => {
-      setCurrentTime(video.currentTime);
-      if (video.buffered.length > 0) {
-        const b = video.buffered.end(video.buffered.length - 1);
-        setBuffered((b / (video.duration || 1)) * 100);
+      // Throttle setState to max 10fps (100ms) to avoid React 19 "maximum update depth" loop.
+      // The RAF still runs at 60fps for smoothness but only commits to state when needed.
+      const now = performance.now();
+      if (now - lastStateUpdate >= 100) {
+        lastStateUpdate = now;
+        setCurrentTime(video.currentTime);
+        if (video.buffered.length > 0) {
+          const b = video.buffered.end(video.buffered.length - 1);
+          setBuffered((b / (video.duration || 1)) * 100);
+        }
       }
       rafId = requestAnimationFrame(updateProgress);
     };
-    const startRaf = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(updateProgress); };
+    const startRaf = () => { cancelAnimationFrame(rafId); lastStateUpdate = 0; rafId = requestAnimationFrame(updateProgress); };
     const stopRaf  = () => cancelAnimationFrame(rafId);
 
     video.addEventListener("play",                onPlay);
@@ -863,14 +870,22 @@ export default function HlsPlayer({
     if (malId && epNumber) fetchAniSkip(malId, epNumber).then(d => d && setSkipTimes(d));
   }, [malId, epNumber]);
 
+  // skipBanner: use timeupdate event (fires ~4x/sec) instead of depending on
+  // currentTime state to avoid the React 19 "maximum update depth exceeded" loop.
   useEffect(() => {
+    const video = videoRef.current;
+    if (!video) { setSkipBanner(null); return; }
     if (!skipTimes) { setSkipBanner(null); return; }
     const { op, ed } = skipTimes;
-    const t = currentTime;
-    if (op && t >= op.start && t < op.end)       setSkipBanner("op");
-    else if (ed && t >= ed.start && t < ed.end)  setSkipBanner("ed");
-    else                                          setSkipBanner(null);
-  }, [currentTime, skipTimes]);
+    const onTimeUpdate = () => {
+      const t = video.currentTime;
+      if (op && t >= op.start && t < op.end)       setSkipBanner("op");
+      else if (ed && t >= ed.start && t < ed.end)  setSkipBanner("ed");
+      else                                          setSkipBanner(null);
+    };
+    video.addEventListener("timeupdate", onTimeUpdate);
+    return () => { video.removeEventListener("timeupdate", onTimeUpdate); setSkipBanner(null); };
+  }, [skipTimes]);
 
   // ── Auto-next countdown ────────────────────────────────────────────────────
   const cancelCountdown = useCallback(() => {

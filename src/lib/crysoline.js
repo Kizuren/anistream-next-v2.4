@@ -63,6 +63,16 @@ async function cryGet(path, params = {}, timeoutMs = 20000, retries = 1, signal4
         return null;
       }
 
+      // 500 on episodes/sources = Crysoline upstream can't find this anime
+      // on that source. Treat as "not available" — don't retry, return null.
+      // (Retrying just causes 429 storms and delays the fallback source.)
+      if (status === 500) {
+        console.log(`[crysoline] ${path} → 500: ${
+          typeof msg === "string" ? msg.slice(0, 80) : JSON.stringify(msg).slice(0, 80)
+        }`);
+        return null;
+      }
+
       if (status === 429) {
         // Back off progressively: 3s, 8s, 20s — Crysoline blocks for longer than 1s
         const wait = Math.min(3000 * Math.pow(2.5, attempt), 30000);
@@ -156,9 +166,12 @@ export const ALL_SOURCE_IDS = CRYSOLINE_SOURCES.map(s => s.id);
 // Fallback order when AnimeGG fails.
 // Only active sources listed here.
 export const FALLBACK_SOURCE_IDS = [
-  "anizone",    // fallback 1
-  "animepahe",  // fallback 2
-  "anidap",     // fallback 3 — has /servers
+  // Auto-probe fallback chain (sources here are tried automatically when AnimeGG fails).
+  // Only list sources whose Crysoline scrapers are confirmed working.
+  // If a source returns 500 on episodes, Crysoline's scraper is broken for it — remove it.
+  "anizone",    // fallback 1 — working (intermittent 500 on /sources, not episodes)
+  // "animepahe",  // Crysoline scraper returning 500 "Animepahe Episodes failed 404"
+  // "anidap",     // Crysoline scraper returning 500 "Failed to fetch episodes"
 ];
 
 // ── Title helpers ──────────────────────────────────────────────────────────────

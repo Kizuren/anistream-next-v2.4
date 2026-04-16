@@ -1,6 +1,6 @@
 # 🎌 AnimeDex
 
-A fast, modern anime streaming site built with **Next.js 14**. Pulls metadata from AniList's GraphQL API and streams episodes through multiple fallback providers — no single point of failure.
+A fast, modern anime streaming site built with **Next.js 15**. Pulls metadata from AniList's GraphQL API and streams episodes through multiple fallback providers — no single point of failure.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
@@ -218,7 +218,7 @@ MIT — free to use, modify, and distribute.
 
 ## Disclaimer
 
-This project is open-source under the MIT License and is intended for self-hosting only. Any form of commercial use is strictly prohibited. ANIMEDEX does not host, upload, or store any media files and solely acts as an interface to access publicly available third-party content.
+> This project is open-source under the MIT License and is intended for self-hosting only. Any form of commercial use is strictly prohibited. AnimeDex does not host, upload, or store any media files and solely acts as an interface to access publicly available third-party content.
 
 ---
 

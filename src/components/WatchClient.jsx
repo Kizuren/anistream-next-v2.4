@@ -230,43 +230,56 @@ export default function WatchClient({ animeId, epSlug }) {
 
   // ── Automatic source fallback chain ───────────────────────────────────────
   const tryFallback = useCallback(async (failedSourceId, subType, server) => {
-    // Only fall back to active sources (those in CRYSOLINE_SOURCES)
     const activeIds   = CRYSOLINE_SOURCES.map(s => s.id);
+    // Include all sources EXCEPT the one that just failed.
+    // Do NOT exclude already-mapped sources — they may work for /sources
+    // even if they weren't chosen during the initial probe race.
     const fallbackIds = [DEFAULT_SOURCE_ID, ...FALLBACK_SOURCE_IDS]
-      .filter(id => id !== failedSourceId && !sourceMap[id] && activeIds.includes(id));
+      .filter(id => id !== failedSourceId && activeIds.includes(id));
 
     for (const fid of fallbackIds) {
       try {
         console.log(`[watch] source ${failedSourceId} failed → trying ${fid}`);
-        const data = await api.crysoline.mapOne(anilistId, fid);
-        if (!data?.mappedId) continue;
-        setSourceMap(prev => ({ ...prev, [fid]: data.mappedId }));
-        const epsData = await api.crysoline.episodes(fid, data.mappedId, anilistId);
-        if (!epsData?.episodes?.length) continue;
 
-        setActiveSrcId(fid);
-        setCryEps(epsData.episodes);
-        saveSourcePref({ sourceId: fid });
+        // Use cached mapping if available, otherwise re-map
+        let mappedId = sourceMap[fid] || null;
+        if (!mappedId) {
+          const data = await api.crysoline.mapOne(anilistId, fid);
+          if (!data?.mappedId) continue;
+          mappedId = data.mappedId;
+          setSourceMap(prev => ({ ...prev, [fid]: mappedId }));
+        }
 
-        const ep = epsData.episodes.find(e => Number(e.number) === epNumber)
-                || epsData.episodes[epNumber - 1];
+        // Use cached episodes if already loaded, otherwise fetch
+        let episodes = null;
+        if (fid === activeSrcId && cryEps.length > 0) {
+          episodes = cryEps;
+        } else {
+          const epsData = await api.crysoline.episodes(fid, mappedId, anilistId);
+          if (!epsData?.episodes?.length) continue;
+          episodes = epsData.episodes;
+        }
+
+        const ep = episodes.find(e => Number(e.number) === epNumber)
+                || episodes[epNumber - 1];
         if (!ep) continue;
 
         const epId = ep.id || String(epNumber);
-        const stream = await api.crysoline.sources(fid, data.mappedId, epId, subType, server);
+        const stream = await api.crysoline.sources(fid, mappedId, epId, subType, server);
         if (stream.sources?.length) {
+          setActiveSrcId(fid);
+          setCryEps(episodes);
           setCryStream(stream);
           setCrySelSrc(stream.sources[0]);
           setCrySErr(null);
+          saveSourcePref({ sourceId: fid });
           return;
         }
       } catch { continue; }
     }
-    // All fallbacks exhausted — embedded mode is disabled
     console.log("[watch] all fallbacks failed");
-    // setSourceMode("embedded"); // embedded disabled
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [anilistId, epNumber, sourceMap]);
+  }, [anilistId, epNumber, sourceMap, activeSrcId, cryEps]);
 
   // ── Auto-load on mount: race all sources ──────────────────────────────────
   const streamRaceRan = useRef(false);
