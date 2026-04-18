@@ -96,12 +96,12 @@ export const api = {
       cryPost("episodes", { sourceId, mappedId, ...(anilistId ? { anilistId } : {}) }),
 
     /** Get streaming servers (only for sources with hasServers:true) */
-    servers: (sourceId, mappedId, episodeId) =>
-      cryPost("servers", { sourceId, mappedId, episodeId }),
+    servers: (sourceId, mappedId, episodeId, episodeNumber) =>
+      cryPost("servers", { sourceId, mappedId, episodeId, episodeNumber }),
 
     /** Get actual stream URLs for an episode */
-    sources: (sourceId, mappedId, episodeId, subType = "", server = "") =>
-      cryPost("sources", { sourceId, mappedId, episodeId, subType, server }),
+    sources: (sourceId, mappedId, episodeId, subType = "", server = "", episodeNumber) =>
+      cryPost("sources", { sourceId, mappedId, episodeId, subType, server, episodeNumber }),
 
     /** Auto-find first working stream across all sources */
     auto: (anilistId, epNumber, subType = "sub") =>
