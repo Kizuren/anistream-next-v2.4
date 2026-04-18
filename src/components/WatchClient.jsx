@@ -209,15 +209,16 @@ export default function WatchClient({ animeId, epSlug }) {
     if (!ep) return;
 
     const episodeId = ep.id || String(epNumber);
+    const episodeNumber = ep.number || epNumber;
     setCrySLoad(true); setCrySErr(null); setCryStream(null); setCrySelSrc(null);
 
     try {
       const src = CRYSOLINE_SOURCES.find(s => s.id === activeSrcId);
       if (src?.hasServers) {
-        const sv = await api.crysoline.servers(activeSrcId, mappedId, episodeId);
+        const sv = await api.crysoline.servers(activeSrcId, mappedId, episodeId, episodeNumber);
         setCryServers(sv.servers || []);
       }
-      const data = await api.crysoline.sources(activeSrcId, mappedId, episodeId, subType, server);
+      const data = await api.crysoline.sources(activeSrcId, mappedId, episodeId, subType, server, episodeNumber);
       setCryStream(data);
       if (data.sources?.length) {
         setCrySelSrc(data.sources[0]);
@@ -269,7 +270,7 @@ export default function WatchClient({ animeId, epSlug }) {
         if (!ep) continue;
 
         const epId = ep.id || String(epNumber);
-        const stream = await api.crysoline.sources(fid, mappedId, epId, subType, server);
+        const stream = await api.crysoline.sources(fid, mappedId, epId, subType, server, ep.number || epNumber);
         if (stream.sources?.length) {
           setActiveSrcId(fid);
           setCryEps(episodes);

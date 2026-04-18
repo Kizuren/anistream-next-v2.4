@@ -131,9 +131,9 @@ export const CRYSOLINE_SOURCES = [
   // ── ACTIVE — stable, working sources ─────────────────────────────────────
   { id: "animegg",  name: "AnimeGG",  site: "animegg.org", langs: ["en","ja"], hasServers: false, isDefault: true },
   { id: "anizone",  name: "Anizone",  site: "anizone.to",  langs: ["en","ja"], hasServers: false },
+  { id: "animepahe", name: "AnimePahe", site: "animepahe.pw",   langs: ["en","ja"], hasServers: false },
 
   // ── INACTIVE — Crysoline scrapers returning 500; re-enable when fixed ────
-  // { id: "animepahe", name: "AnimePahe", site: "animepahe.pw",   langs: ["en","ja"], hasServers: false },
   // { id: "anidap",    name: "Anidap",    site: "anidap.se",      langs: ["en","ja"], hasServers: true  },
   // { id: "animekai",  name: "AnimeKai",  site: "anikai.to",      langs: ["en","ja"], hasServers: false },
   // { id: "kickassanime", name: "KickAssAnime", site: "kaa.lt",   langs: ["en","ja"], hasServers: false },
@@ -327,7 +327,36 @@ export async function getEpisodesFromSource(sourceId, mappedId) {
   }));
 }
 
-export async function getServersFromSource(sourceId, mappedId, episodeId) {
+async function resolveEpisodeId(sourceId, mappedId, episodeId, episodeNumber) {
+  if (!mappedId) return episodeId;
+  const epNum = Number(episodeNumber);
+  const hasEpNum = Number.isFinite(epNum) && epNum > 0;
+  if (sourceId !== "animepahe" && sourceId !== "anizone") return episodeId;
+
+  // animepahe expects a hash episodeId, not a slug like "...-episode-1".
+  if (sourceId === "animepahe" && /^[a-f0-9]{32,}$/i.test(episodeId)) return episodeId;
+
+  // anizone expects a base64 episodeId from the episodes list (e.g. "ZjFnMWF1eXgvMQ==").
+  if (sourceId === "anizone" && /^[A-Za-z0-9+/]+={0,2}$/.test(episodeId || "") && episodeId?.length >= 8) {
+    return episodeId;
+  }
+
+  if (!hasEpNum) {
+    if (!episodeId) return episodeId;
+    const match = episodeId.match(/(?:episode|ep)[-\s]*(\d+)/i) || episodeId.match(/(\d+)$/);
+    const parsed = match ? Number(match[1]) : NaN;
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return resolveEpisodeId(sourceId, mappedId, episodeId, parsed);
+    }
+    return episodeId;
+  }
+
+  const episodes = await getEpisodesFromSource(sourceId, mappedId);
+  const ep = episodes.find(e => Number(e.number) === epNum);
+  return ep?.id || episodeId;
+}
+
+export async function getServersFromSource(sourceId, mappedId, episodeId, episodeNumber) {
   const src = CRYSOLINE_SOURCES.find(s => s.id === sourceId);
   if (!src?.hasServers) return [];
   if (!mappedId || !episodeId) return [];
@@ -344,19 +373,23 @@ export async function getServersFromSource(sourceId, mappedId, episodeId) {
     return [];
   }
 
+  const resolvedEpisodeId = await resolveEpisodeId(sourceId, mappedId, episodeId, episodeNumber);
+
   const data = await cryGet(
     `/api/v1/anime/${sourceId}/servers`,
-    { id: mappedId, episodeId },
+    { id: mappedId, episodeId: resolvedEpisodeId },
     20000, 1
   );
   if (!data) return [];
   return data.servers || (Array.isArray(data) ? data : []);
 }
 
-export async function getSourcesFromSource(sourceId, mappedId, episodeId, subType = "", server = "") {
+export async function getSourcesFromSource(sourceId, mappedId, episodeId, subType = "", server = "", episodeNumber) {
   if (!mappedId || !episodeId) return { sources: [], subtitles: [], headers: {} };
 
-  const params = { id: mappedId, episodeId };
+  const resolvedEpisodeId = await resolveEpisodeId(sourceId, mappedId, episodeId, episodeNumber);
+
+  const params = { id: mappedId, episodeId: resolvedEpisodeId };
   if (subType) params.subType = subType;
   if (server)  params.server  = server;
 

@@ -194,14 +194,14 @@ export async function POST(request) {
 
       // ── SERVERS ───────────────────────────────────────────────────────
       case "servers": {
-        const { sourceId, mappedId, episodeId } = body;
+        const { sourceId, mappedId, episodeId, episodeNumber } = body;
         if (!sourceId || !mappedId || !episodeId) return err("sourceId, mappedId, episodeId required");
 
         const cacheKey = `cryo_srv:${sourceId}:${mappedId}:${episodeId}`;
         const cached   = await getCachedAsync(cacheKey);
         if (cached) return ok(cached);
 
-        const servers = await getServersFromSource(sourceId, mappedId, episodeId);
+        const servers = await getServersFromSource(sourceId, mappedId, episodeId, episodeNumber);
         const result  = { servers: servers||[] };
 
         if (result.servers.length > 0) await setCachedAsync(cacheKey, result, 1800); // 30min — reduce Vercel invocations
@@ -211,7 +211,7 @@ export async function POST(request) {
       // ── SOURCES ───────────────────────────────────────────────────────
       case "sources": {
         try {
-          const { sourceId, mappedId, episodeId, subType = "", server = "" } = body;
+          const { sourceId, mappedId, episodeId, subType = "", server = "", episodeNumber } = body;
 
           if (!sourceId || !mappedId || !episodeId) {
             return err("sourceId, mappedId, episodeId required");
@@ -226,7 +226,8 @@ export async function POST(request) {
             mappedId,
             episodeId,
             subType,
-            server
+            server,
+            episodeNumber
           );
 
           if (stream?.sources?.length > 0) {
