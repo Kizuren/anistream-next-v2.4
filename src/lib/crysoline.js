@@ -129,15 +129,9 @@ async function cryGet(path, params = {}, timeoutMs = 20000, retries = 1, signal4
  */
 export const CRYSOLINE_SOURCES = [
   // ── ACTIVE — stable, working sources ─────────────────────────────────────
-<<<<<<< HEAD
   { id: "animepahe", name: "AnimePahe", site: "animepahe.pw",   langs: ["en","ja"], hasServers: false, isDefault: true },
   { id: "animegg",   name: "AnimeGG",   site: "animegg.org",    langs: ["en","ja"], hasServers: false },
   { id: "anizone",   name: "Anizone",   site: "anizone.to",     langs: ["en","ja"], hasServers: false },
-=======
-  { id: "animegg",  name: "AnimeGG",  site: "animegg.org", langs: ["en","ja"], hasServers: false, isDefault: true },
-  { id: "anizone",  name: "Anizone",  site: "anizone.to",  langs: ["en","ja"], hasServers: false },
-  { id: "animepahe", name: "AnimePahe", site: "animepahe.pw",   langs: ["en","ja"], hasServers: false },
->>>>>>> 828135b5e55d9184ec11ceb6cb8a26b4bab1f03f
 
   // ── INACTIVE — Crysoline scrapers returning 500; re-enable when fixed ────
   // { id: "anidap",    name: "Anidap",    site: "anidap.se",      langs: ["en","ja"], hasServers: true  },

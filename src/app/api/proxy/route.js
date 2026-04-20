@@ -59,7 +59,6 @@ function cfRedirect(rawUrl, referer) {
   return NextResponse.redirect(cfUrl.toString(), 307);
 }
 
-<<<<<<< HEAD
 // Hosts that need server-side proxying (their CDN restricts CORS to their own origin).
 // For these, we fetch server-side and rewrite the manifest — segments go direct.
 // Everything else redirects to the CF Worker.
@@ -75,23 +74,16 @@ function needsVercelProxy(rawUrl) {
   } catch { return false; }
 }
 
-=======
->>>>>>> 828135b5e55d9184ec11ceb6cb8a26b4bab1f03f
 export async function GET(request) {
   const reqUrl  = new URL(request.url);
   const rawUrl  = reqUrl.searchParams.get("url");
   const referer = reqUrl.searchParams.get("referer") || "";
   if (!rawUrl) return NextResponse.json({ error: "url param required" }, { status: 400 });
 
-<<<<<<< HEAD
   // ── Production: CF Worker handles everything EXCEPT CORS-locked CDNs ──────
   // vid-cdn.xyz (anizone) returns Access-Control-Allow-Origin: https://anizone.to
   // CF Worker IPs are blocked by this CDN — handle these server-side on Vercel instead.
   if (CF_PROXY && !needsVercelProxy(rawUrl)) return cfRedirect(rawUrl, referer);
-=======
-  // ── Production: everything goes to CF Worker ──────────────────────────────
-  if (CF_PROXY) return cfRedirect(rawUrl, referer);
->>>>>>> 828135b5e55d9184ec11ceb6cb8a26b4bab1f03f
 
   // ── Dev fallback ──────────────────────────────────────────────────────────
   let targetUrl;

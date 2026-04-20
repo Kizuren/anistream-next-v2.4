@@ -100,13 +100,10 @@ export default function Footer() {
         <div className={styles.bottomRight}>
           <Link href="/dmca"    className={styles.legalLink}>DMCA</Link>
           <span className={styles.bottomDot}>·</span>
-<<<<<<< HEAD
           <Link href="/features"  className={styles.legalLink}>Features</Link>
           <span className={styles.bottomDot}>·</span>
           <Link href="/settings"  className={styles.legalLink}>Settings</Link>
           <span className={styles.bottomDot}>·</span>
-=======
->>>>>>> 828135b5e55d9184ec11ceb6cb8a26b4bab1f03f
           <Link href="/privacy" className={styles.legalLink}>Privacy</Link>
           <span className={styles.bottomDot}>·</span>
           <Link href="/terms"   className={styles.legalLink}>Terms</Link>
