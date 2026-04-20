@@ -37,17 +37,17 @@ export default function CachePage() {
 
       <div style={{ display:"flex", flexDirection:"column", gap:16, background:"#0d0b14", padding:24, borderRadius:10, border:"1px solid #2a2040", marginBottom:24 }}>
         <div>
-          <label style={{ ...lbl as any }}>Cache Clear Secret (if set in Vercel)</label>
-          <input style={{ ...inp as any }} type="password" value={secret} onChange={e => setSecret(e.target.value)} placeholder="Leave blank if not configured" />
+          <label style={{ ...lbl }}>Cache Clear Secret (if set in Vercel)</label>
+          <input style={{ ...inp }} type="password" value={secret} onChange={e => setSecret(e.target.value)} placeholder="Leave blank if not configured" />
         </div>
         <div>
-          <label style={{ ...lbl as any }}>AniList ID (optional — clears one anime only)</label>
-          <input style={{ ...inp as any }} type="number" value={animeId} onChange={e => setAnimeId(e.target.value)} placeholder="e.g. 125367 — blank for full clear" />
+          <label style={{ ...lbl }}>AniList ID (optional — clears one anime only)</label>
+          <input style={{ ...inp }} type="number" value={animeId} onChange={e => setAnimeId(e.target.value)} placeholder="e.g. 125367 — blank for full clear" />
         </div>
         {!animeId && (
           <div>
-            <label style={{ ...lbl as any }}>Target</label>
-            <select style={{ ...inp as any }} value={target} onChange={e => setTarget(e.target.value)}>
+            <label style={{ ...lbl }}>Target</label>
+            <select style={{ ...inp }} value={target} onChange={e => setTarget(e.target.value)}>
               <option value="all">All (Redis + Turso)</option>
               <option value="redis">Redis only</option>
               <option value="turso">Turso only</option>
@@ -55,11 +55,11 @@ export default function CachePage() {
           </div>
         )}
         <div style={{ display:"flex", gap:10, marginTop:4 }}>
-          <button style={{ ...btn as any }} disabled={loading}
+          <button style={{ ...btn }} disabled={loading}
             onClick={() => animeId ? call({ anilistId: Number(animeId) }) : call({ target })}>
             {loading ? "Clearing…" : animeId ? `Clear anime ${animeId}` : `Clear ${target}`}
           </button>
-          <button style={{ ...btnGhost as any }} onClick={() => { setResult(null); setAnimeId(""); }}>Reset</button>
+          <button style={{ ...btnGhost }} onClick={() => { setResult(null); setAnimeId(""); }}>Reset</button>
         </div>
       </div>
 
