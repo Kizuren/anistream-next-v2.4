@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { AuthProvider } from "@/components/AuthProvider";
 import LandingGate from "@/components/LandingGate";
 import ScrollToTop from "@/components/ScrollToTop";
+import { Analytics } from "@vercel/analytics/next";
 
 export const viewport = {
   themeColor: "#07060b",
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
           <Footer />
         <ScrollToTop />
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
